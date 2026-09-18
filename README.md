@@ -28,17 +28,18 @@ Alberto de Jesús Carlos Muro
 
 ## Estado actual
 
-**Sprint / Versión:** Design Baseline v1.0
-
-
+**Sprint / Versión:** Sprint I – Planificación de la construcción
 
 **Estado general:** 
-Actualmente el proyecto se encuentra en la etapa de **Diseño**. Se han definido los requerimientos, arquitectura del sistema, componentes principales, estructura de la base de datos, funcionamiento esperado, prototipos y planificación del proyecto.
+Actualmente el proyecto se encuentra en el Sprint I, correspondiente a la etapa de Planificación de la construcción.
 
-**Última actualización:** Desing Baseline v1.0
+Se han definido los requerimientos del proyecto, el análisis de riesgos y las estrategias de mitigación, estableciendo la base necesaria para iniciar la etapa de construcción.
+
+**Última actualización:** sprint-1-plan-baseline-v1.0
 
 ## Estructura general del repositorio
-- design-baseline/: Aquí se almacenan los elementos técnicos precedidos de el Laboratorio Abierto: Diseño. Muestra el estado exacto que concibe el proyecto antes de iniciar la construcción. 
+
+- **design-baseline/:** Aquí se almacenan los elementos técnicos precedidos de el Laboratorio Abierto: Diseño. Muestra el estado exacto que concibe el proyecto antes de iniciar la construcción. 
 
 - **docs/:** Almacena la documentación del proyecto, manuales detallados de lo construido durante el desarrollo del proyecto.
 
@@ -66,4 +67,6 @@ Actualmente el proyecto se encuentra en la etapa de **Diseño**. Se han definido
 
 Esta versión corresponde a la línea base del diseño y establece los elementos que serán utilizados como referencia durante la etapa de Construcción.
 
+**sprint-1-plan-baseline-v1.0**
 
+Esta versión corresponde a todas las actividades realizadas para el Sprint I, estableciendo como referencia las actividades planificadas, los objetivos definidos, los entregables generados y el avance alcanzado durante este periodo de desarrollo.
