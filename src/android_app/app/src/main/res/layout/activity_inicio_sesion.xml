@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <!-- Logo o imagen superior -->
+
+        <!-- Campo de Email -->
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="245dp"
+            android:layout_height="162dp"
+            app:srcCompat="@drawable/logo" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Inicie Sesión"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ingresa tu correo electrónico para iniciar sesión o haz click en registrarte"
+            android:textAlignment="center"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/edittext_bg"
+            android:drawablePadding="10dp"
+            android:hint="correoelectrónico@dominio.com"
+            android:inputType="textEmailAddress"
+            android:padding="15dp" />
+
+        <!-- Campo de Contraseña -->
+
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Contraseña"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="textPassword"
+            android:layout_marginTop="20dp" />
+
+        <!-- Botón principal -->
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:text="INICIAR SESIÓN"
+            android:textAllCaps="true"
+            android:backgroundTint="#0095FF"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="30dp" />
+
+        <!-- Enlace a registro -->
+
+        <TextView
+            android:id="@+id/txtRegistrar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="¿No tienes una cuenta? Regístrate"
+            android:textColor="#0059D6"
+            android:layout_marginTop="25dp"
+            android:textSize="14sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="90dp" />
+
+    </LinearLayout>
+
+</ScrollView>

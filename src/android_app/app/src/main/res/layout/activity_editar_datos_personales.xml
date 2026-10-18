@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Editar datos personales"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Campo de Email -->
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/edittext_bg"
+            android:drawablePadding="10dp"
+            android:hint="correoelectrónico@dominio.com"
+            android:inputType="textEmailAddress"
+            android:padding="15dp" />
+
+        <!-- Campo de Nombre -->
+        <EditText
+            android:id="@+id/edtNombre"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Nombre"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="textPersonName"
+            android:layout_marginTop="20dp" />
+
+        <!-- Campo de Telefono -->
+        <EditText
+            android:id="@+id/edtTelefono"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Teléfono (opcional)"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="phone"
+            android:maxLength="10"
+            android:layout_marginTop="20dp" />
+
+        <!-- Switch de Discapacidad -->
+        <LinearLayout
+            android:id="@+id/layoutDiscapacidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="25dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txtDiscapacidadLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="¿Tienes alguna discapacidad?"
+                android:textSize="14sp"
+                android:textColor="#000000" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchDiscapacidad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                app:thumbTint="#FFFFFF"
+                app:trackTint="#0095FF" />
+
+        </LinearLayout>
+
+        <!-- Campo Folio (inicialmente oculto) -->
+        <EditText
+            android:id="@+id/edtFolioDiscapacidad"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Ingresa tu folio de discapacidad"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="text"
+            android:layout_marginTop="15dp"
+            android:visibility="gone" />
+
+        <!-- Botón principal para guardar cambios -->
+        <Button
+            android:id="@+id/btnGuardar"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:text="GUARDAR CAMBIOS"
+            android:textAllCaps="true"
+            android:backgroundTint="#0095FF"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="30dp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="90dp" />
+
+    </LinearLayout>
+
+</ScrollView>

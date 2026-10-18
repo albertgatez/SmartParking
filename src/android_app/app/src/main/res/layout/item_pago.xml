@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="12dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="14dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Primera fila: ID + estado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtIdReserva"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Reserva #1234"
+                android:textStyle="bold"
+                android:textSize="17sp"
+                android:textColor="#2E2E2E" />
+
+            <TextView
+                android:id="@+id/txtEstadoPago"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pagado"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:padding="4dp"
+                android:background="#D5F5E3"
+                android:textColor="#1E8449" />
+        </LinearLayout>
+
+        <!-- Monto -->
+        <TextView
+            android:id="@+id/txtMonto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$150.00 MXN"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="6dp"
+            android:textColor="#1A5276" />
+
+        <!-- Fecha -->
+        <TextView
+            android:id="@+id/txtFecha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fecha: 2024-01-01"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"
+            android:textColor="#555555" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+
+

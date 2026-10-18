@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/txtPerfilTitulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Perfil"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp" />
+
+        <!-- Foto circular con CardView -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="70dp"
+            app:cardElevation="4dp">
+
+            <ImageView
+                android:id="@+id/imgPerfil"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Foto de perfil - Toca para cambiar"
+                android:scaleType="centerCrop"
+                android:src="@drawable/blank_profile_picture"
+                android:clickable="true"
+                android:focusable="true" />
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Toca la foto para cambiarla"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Saludo -->
+        <TextView
+            android:id="@+id/txtNombre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Buen día, Usuario"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <!-- Botones para navegar -->
+        <Button
+            android:id="@+id/btnCambiarDatos"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="25dp"
+            android:text="CAMBIAR DATOS PERSONALES"
+            android:textAllCaps="true"
+            android:backgroundTint="#0095FF"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/btnCambiarContra"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:backgroundTint="#0095FF"
+            android:text="CAMBIAR CONTRASEÑA"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:layout_marginBottom="10dp" />
+
+    </LinearLayout>
+
+</ScrollView>
