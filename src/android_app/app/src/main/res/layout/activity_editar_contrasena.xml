@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cambiar Contraseña"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Campo de Contraseña Antigua -->
+        <EditText
+            android:id="@+id/edtOldPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/edittext_bg"
+            android:drawablePadding="10dp"
+            android:hint="Contraseña anterior"
+            android:inputType="textEmailAddress"
+            android:padding="15dp" />
+
+        <!-- Campo de Contraseña Nueva -->
+        <EditText
+            android:id="@+id/edtNewPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Contraseña nueva"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="textPassword"
+            android:layout_marginTop="20dp" />
+
+        <!-- Campo de confirmar nueva contraseña -->
+        <EditText
+            android:id="@+id/edtNewConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Confirmar contraseña"
+            android:drawablePadding="10dp"
+            android:background="@drawable/edittext_bg"
+            android:padding="15dp"
+            android:inputType="textPassword"
+            android:layout_marginTop="20dp" />
+
+        <!-- Botón principal para guardar cambios -->
+        <Button
+            android:id="@+id/btnGuardar"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:text="GUARDAR CAMBIOS"
+            android:textAllCaps="true"
+            android:backgroundTint="#0095FF"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="30dp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="90dp" />
+
+    </LinearLayout>
+
+</ScrollView>

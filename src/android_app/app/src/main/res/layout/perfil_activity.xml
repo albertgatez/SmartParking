@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Título -->
+
+        <TextView
+            android:id="@+id/txtPerfilTitulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Perfil"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp" />
+
+        <!-- Foto circular -->
+        <ImageView
+            android:id="@+id/imgPerfil"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginTop="20dp"
+            android:src="@drawable/ic_user_placeholder"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circle_mask" />
+
+        <!-- Saludo -->
+        <TextView
+            android:id="@+id/txtNombre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Buen día, Usuario"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp" />
+
+        <!-- Botones grandes -->
+        <Button
+            android:id="@+id/btnEditarPerfil"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="25dp"
+            android:text="EDITAR PERFIL"
+            android:textAllCaps="true"
+            android:backgroundTint="#0095FF"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/btnHistorial"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:backgroundTint="#0095FF"
+            android:text="HISTORIAL"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/btnMetodosPago"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:backgroundTint="#0095FF"
+            android:text="MÉTODOS DE PAGO"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:layout_marginBottom="80dp" />
+
+        <Button
+            android:id="@+id/btnMetodosPago2"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="80dp"
+            android:backgroundTint="#E0DFDF"
+            android:text="Cerrar sesión"
+            android:textAllCaps="true"
+            android:textColor="#0094FD" />
+
+        <!-- Botón cerrar sesión -->
+        <!-- Separación por menú inferior -->
+
+    </LinearLayout>
+
+</ScrollView>
