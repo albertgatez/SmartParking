@@ -1,0 +1,24 @@
+# Servicio systemd para que el gateway arranque solo al encender la Raspberry
+# y se reinicie si falla (RNF-02 de fiabilidad).
+#
+# Instalacion:
+#   sudo cp smartparking-gateway.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now smartparking-gateway
+# Ver registros:
+#   journalctl -u smartparking-gateway -f
+
+[Unit]
+Description=SmartParking - Gateway Arduino / MQTT / Supabase
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/smartparking
+ExecStart=/home/pi/smartparking/venv/bin/python /home/pi/smartparking/gateway.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
