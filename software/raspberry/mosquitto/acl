@@ -1,0 +1,10 @@
+# SmartParking - permisos de Mosquitto
+# Copiar a /etc/mosquitto/acl
+
+# El gateway publica el estado de los cajones y del propio gateway
+user gateway
+topic readwrite smartparking/#
+
+# Clientes de monitoreo: solo lectura
+user monitor
+topic read smartparking/#
