@@ -212,7 +212,7 @@ CREATE TRIGGER notificacion_enviar_push
 | Función | La llama | Autenticación | Verify JWT | Secretos |
 |---|---|---|---|---|
 | `notificar-bienvenida` | La app, tras el registro | JWT del usuario | Activado | `FIREBASE_SERVICE_ACCOUNT` |
-| `enviar-notificacion` | El trigger `notificacion_enviar_push` | Header `x-webhook-secret` | **Desactivado** | `FIREBASE_SERVICE_ACCOUNT`, `FCM_WEBOOK_SECRET` |
+| `enviar-notificacion` | El trigger `notificacion_enviar_push` | Header `x-webhook-secret` | **Desactivado** | `FIREBASE_SERVICE_ACCOUNT`, `FCM_WEBHOOK_SECRET` |
 
 `enviar-notificacion` debe desplegarse sin verificación de JWT, porque el trigger no manda uno. Si queda activada, toda llamada responde `401 Invalid JWT` antes de ejecutar el código.
 
@@ -252,7 +252,7 @@ Recibe el evento de la base de datos y manda como push la fila insertada:
 }
 ```
 
-1. Compara el header `x-webhook-secret` con el secreto `FCM_WEBOOK_SECRET`.
+1. Compara el header `x-webhook-secret` con el secreto `FCM_WEBHOOK_SECRET`.
 2. Lee `Usuario.fcm_token` con la llave `service_role`.
 3. Manda a FCM `tipo`, `titulo`, `mensaje` e `id_notificacion`.
 4. Si FCM acepta el mensaje, pone `push_enviada = true`.
@@ -287,7 +287,7 @@ Recibe el evento de la base de datos y manda como push la fila insertada:
 | Secreto | Contenido | Quién lo usa |
 |---|---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | JSON completo de la cuenta de servicio (Firebase → Configuración → Cuentas de servicio → Generar nueva clave privada) | Las dos Edge Functions |
-| `FCM_WEBOOK_SECRET` | Texto largo y aleatorio inventado por el equipo. Debe ser **idéntico** al valor del header `x-webhook-secret` del trigger | `enviar-notificacion` y el trigger |
+| `FCM_WEBHOOK_SECRET` | Texto largo y aleatorio inventado por el equipo. Debe ser **idéntico** al valor del header `x-webhook-secret` del trigger | `enviar-notificacion` y el trigger |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Los inyecta Supabase automáticamente | Las dos Edge Functions |
 
 - El nombre del secreto debe coincidir exactamente con el de `Deno.env.get("...")` en `enviar-notificacion/index.ts`.
@@ -323,7 +323,7 @@ Orden para dejarlo funcionando desde cero:
 
 ```bash
 supabase secrets set FIREBASE_SERVICE_ACCOUNT="$(cat cuenta-de-servicio.json)"
-supabase secrets set FCM_WEBOOK_SECRET=<valor>
+supabase secrets set FCM_WEBHOOK_SECRET=<valor>
 ```
 
 4. Desplegar las funciones (o crearlas en el panel con su `index.ts`):

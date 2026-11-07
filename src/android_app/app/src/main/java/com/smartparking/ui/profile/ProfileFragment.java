@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -18,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.smartparking.perfil.EditarPerfil;
 import com.smartparking.pagos.HistorialActivity;
+import com.smartparking.pagos.MetodosPagoActivity;
 import com.smartparking.databinding.FragmentProfileBinding;
 
 public class ProfileFragment extends Fragment {
@@ -76,7 +76,7 @@ public class ProfileFragment extends Fragment {
         binding.btnEditarPerfil.setOnClickListener(v -> irAEditarPerfil());
         binding.btnHistorial.setOnClickListener(v -> irAHistorial());
         binding.btnMetodosPago.setOnClickListener(v -> irAMetodosPago());
-        binding.btnMetodosPago2.setOnClickListener(v -> viewModel.cerrarSesion(requireActivity()));
+        binding.btnCerrarSesion.setOnClickListener(v -> viewModel.cerrarSesion(requireActivity()));
     }
 
     private void irAEditarPerfil() {
@@ -103,7 +103,8 @@ public class ProfileFragment extends Fragment {
     }
 
     private void irAMetodosPago() {
-        Toast.makeText(requireActivity(), "Métodos de Pago (próximamente)", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(requireActivity(), MetodosPagoActivity.class);
+        startActivity(intent);
     }
 
     @Override

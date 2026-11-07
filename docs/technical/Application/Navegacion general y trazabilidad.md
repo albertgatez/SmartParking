@@ -35,6 +35,7 @@ flowchart TD
     EP --> EC[EditarContrasena]
     EC -- "⑪ contraseña" --> EP
     P --> HI[HistorialActivity]
+    P --> MP[MetodosPagoActivity]
     P -- "⑫ cerrar sesión" --> L
 ```
 
@@ -52,6 +53,7 @@ Los números (①…⑫) corresponden a los puntos de registro de la sección 3.
 | `EditarDatosPersonales` | Editar perfil | Guardar → Editar perfil; si cambió el correo → Inicio de sesión |
 | `EditarContrasena` | Editar perfil | Guardar → Editar perfil |
 | `HistorialActivity` | Perfil → "Historial" | Atrás → Perfil |
+| `MetodosPagoActivity` | Perfil → "Métodos de pago" | Atrás → Perfil |
 
 ### Navegación entre módulos
 
@@ -105,7 +107,7 @@ Cada punto en el que la app crea o cambia información del usuario, dónde se gu
 | ② | Renovación del token | `ApiClient` / `SessionManager` | `POST /auth/v1/token?grant_type=refresh_token` | Nuevo `access_token` en el teléfono |
 | ③ | Reserva creada | `SeleccionReservaActivity` → `crearReserva()` | `POST /rest/v1/Reserva` | Fila en `Reserva` con `confirmada = false`, `created_at` y `expiracion`; copia local en `ReservaActivaPrefs` |
 | ④ | Reserva pendiente expirada | `ReservaRepository.limpiarReserva(true)` | `DELETE /rest/v1/Reserva?id=eq.<id>` | La fila se borra (no queda rastro de la reserva no pagada) |
-| ⑤ | Pago (reserva o extensión) | `ShoppingCartFragment` / `HomeFragment` → `ReservaApiClient` | `POST /functions/v1/crear-pago-reserva` | PaymentIntent en Stripe; fila en `Pagos` escrita del lado del servidor (la app no inserta en `Pagos`) |
+| ⑤ | Pago (reserva o extensión) | `ShoppingCartFragment` / `HomeFragment` → `ReservaApiClient` | `POST /functions/v1/crear-pago-reserva-v2` | PaymentIntent en Stripe con el monto calculado en el servidor; el webhook confirma o extiende la reserva y escribe la fila en `Pagos` (la app no inserta en `Pagos`) |
 | ⑥ | Reserva confirmada | `ReservaRepository.confirmarReservaActual()` | `PATCH /rest/v1/Reserva` (`confirmada = true`) | Cambio de estado en `Reserva` |
 | ⑦ | Boleto escaneado | `HomeFragment.guardarTokenEstacionamiento()` | `PATCH /rest/v1/Reserva` (`token_estacionamiento`) | Código del QR en `Reserva`; prueba de que el usuario llegó |
 | ⑧ | Tiempo extendido | `HomeFragment.procesarExtensionDespuesDePago()` | `PATCH /rest/v1/Reserva` (`tiempo_fin`) | Nuevo `tiempo_fin` en `Reserva` |
@@ -147,20 +149,24 @@ Revisión de cada pantalla contra el criterio de terminado ("se puede recorrer l
 | Inicio (4 estados de reserva) | Completa | |
 | Mapa y ficha del estacionamiento | Completa | |
 | Selección de cajón y horario | Completa | |
-| Carrito | Completa con un dato fijo | El método de pago muestra un texto fijo "Visa \*\*\*\* \*\*\*\* \*\*\*\* 1234"; el método real se elige en el PaymentSheet de Stripe. |
-| **Avisos** | **Placeholder** | `NotificationsViewModel` muestra el texto de plantilla "This is notifications fragment". Pendiente de FCM. |
-| Perfil | Completa salvo un botón | |
-| **Perfil → "Métodos de pago"** | **Placeholder** | Solo muestra el aviso "Métodos de Pago (próximamente)". |
+| Carrito | Completa | El método de pago muestra la tarjeta guardada más reciente del usuario (o "Sin método de pago guardado") y al tocarlo abre Métodos de pago; ver [Métodos de pago](Metodos%20de%20pago.md). Los precios y el cupón los calcula el servidor (`crear-pago-reserva-v2`). |
+| Avisos | Completa | Lista de avisos del usuario; ver [Notificaciones](Notificaciones.md). |
+| Perfil | Completa | |
+| Perfil → "Métodos de pago" | Completa | Lista, agrega y elimina tarjetas guardadas en Stripe; ver [Métodos de pago](Metodos%20de%20pago.md). |
 | Editar perfil, datos personales, contraseña | Completa | |
 | Historial | Completa | Muestra "No tienes pagos registrados" si está vacío. |
-| Imágenes de estacionamientos sin foto | Dependencia externa | Si no hay foto, se usa `via.placeholder.com`, un servicio externo que puede no responder; conviene usar un recurso local. |
-| Layouts sin usar | No accesibles | `activity_detalle_mes.xml`, `perfil_activity.xml` y `home.xml` no los usa ninguna clase; se pueden borrar. |
+| **Imágenes de estacionamientos sin foto** | **Dependencia externa** | Si no hay foto, se usa `via.placeholder.com`, un servicio externo que ya no responde; conviene usar un recurso local. |
+| Layouts sin usar | No accesibles | `activity_detalle_mes.xml` y `home.xml` no los usa ninguna clase; se pueden borrar. (`perfil_activity.xml`, `HomeViewModel` y `ShoppingCartViewModel` ya se borraron.) |
 
-**Resultado:** el recorrido principal (registro → reserva → pago → QR → extensión → historial → cerrar sesión) no tiene pantallas muertas. Para cumplir el criterio completo falta resolver la pestaña **Avisos** y el botón **Métodos de pago**.
+**Resultado:** ya no hay pantallas muertas: la pestaña **Avisos** y el botón **Métodos de pago** tienen pantallas reales. El Carrito muestra la tarjeta guardada del usuario y los precios y el cupón se calculan en el servidor. Para cumplir el criterio completo quedan dos puntos pendientes, que se revisarán después.
 
 ## Pendiente
 
-- **Avisos:** reemplazar el texto de plantilla, aunque sea con un estado vacío ("No tienes avisos"), hasta integrar FCM.
-- **Métodos de pago:** ocultar el botón u ofrecer una pantalla real; Stripe ya permite elegir la tarjeta al pagar.
-- **Método de pago fijo en el Carrito:** quitar el texto "Visa … 1234" o mostrar el método real.
+Pendientes del criterio de terminado (se revisarán después):
+
+- **Método de pago fijo en el diálogo de extensión:** el diálogo sigue mostrando "Tarjeta de Crédito"; puede usar lo mismo que el Carrito (la tarjeta guardada o "Sin método de pago guardado").
+- **Imágenes de `via.placeholder.com`:** usar las imágenes locales `ic_placeholder_image` e `ic_error_image` cuando un estacionamiento no tiene fotos o no se pudieron cargar (`EstacionamientoBottomSheet` y `EstacionamientosHomeAdapter`).
+
+Otros pendientes:
+
 - **Historial de cambios de la reserva:** guardar las extensiones (por ejemplo, en `Pagos.metadata` o en una tabla de eventos) para no perder el horario original.

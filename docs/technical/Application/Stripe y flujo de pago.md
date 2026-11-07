@@ -2,6 +2,8 @@
 
 Los pagos usan **Stripe en modo prueba** con el componente **PaymentSheet** de Android. Stripe guarda los datos de la tarjeta: ni la app ni la base de datos los reciben.
 
+Las tarjetas guardadas del usuario (Perfil → Métodos de pago) y cómo se muestran al pagar están en [Métodos de pago](Metodos%20de%20pago.md).
+
 ## 1. Configuración
 
 | Elemento | Dónde vive | Notas |
@@ -55,42 +57,45 @@ sequenceDiagram
 - Nadie puede confirmar una reserva sin pagar llamando a la API directamente (lo impide la política RLS del issue 8.2).
 - Stripe reintenta el webhook si falla, así que el pago siempre queda registrado.
 
-## 3. Estado actual vs. objetivo
+## 3. Estado actual
 
-| Paso | Hoy | Objetivo |
+| Paso | Estado (07/11/2026) | Pendiente |
 |---|---|---|
-| Cálculo del monto | La app calcula el total y lo manda a `crear-pago-reserva` | La Edge Function lo calcula con los datos de la BD (issue 12.2) |
-| Confirmar la reserva | La app hace `PATCH confirmada = true` al recibir `Completed` | El webhook la confirma |
-| Extender la reserva | La app hace `PATCH tiempo_fin` después de pagar | El webhook extiende `tiempo_fin` |
-| Registro en `Pagos` | Lo hace el backend, pero solo con `monto_total` (`subtotal` está vacío en los 56 pagos actuales) | El webhook guarda subtotal, comisión, descuento y total |
+| Cálculo del monto y cupón | Hecho. La app manda `{ id_reserva, tipo, horas_extra, cupon }` a `crear-pago-reserva-v2`, que calcula el total y valida el cupón. La app ya no tiene porcentajes ni cupones | — |
+| Desglose en pantalla | Hecho. El Carrito y el diálogo de extensión piden el desglose con `solo_cotizar: true` | — |
+| Extender la reserva | Hecho. El webhook extiende `tiempo_fin`; la app ya no hace el `PATCH`, solo actualiza la reserva guardada en el teléfono | — |
+| Confirmar la reserva | El webhook la confirma. La app todavía hace `PATCH confirmada = true` al recibir `Completed` (es el mismo valor, no causa problemas) | Quitarlo de la app antes de aplicar `rls_etapa2` |
+| Registro en `Pagos` | Hecho. El webhook guarda subtotal, comisión, descuento, tipo y el id del PaymentIntent | — |
 | Publishable key | En `BuildConfig` | — |
 
-## 4. Implementación de referencia
+## 4. Edge Functions
 
-Incluida en `/software/supabase/functions/` (propuesta para reemplazar las funciones actuales, que no se pudieron descargar del proyecto):
+En `/software/supabase/functions/`:
 
-| Archivo | Qué hace |
+| Función | Qué hace |
 |---|---|
-| `crear-pago-reserva/index.ts` | Valida al usuario y la reserva, calcula el desglose, crea el PaymentIntent y lo regresa a la app. Con `solo_cotizar: true` solo regresa el desglose. |
+| `crear-pago-reserva-v2/index.ts` | Valida al usuario y la reserva, calcula el desglose, crea el PaymentIntent y lo regresa a la app. Con `solo_cotizar: true` solo regresa el desglose. La fórmula de la comisión (issue 12.1) está en el mismo archivo. |
 | `stripe-webhook/index.ts` | Verifica la firma de Stripe, confirma o extiende la reserva y registra el pago. Si el evento llega dos veces, no duplica el pago. |
-| `_shared/calculo.ts` | Fórmula de la comisión (issue 12.1), compartida por ambas funciones. |
 
-Requiere la migración `20261018_pagos_desglose.sql`, que agrega a `Pagos` las columnas `comision`, `descuento`, `tipo` y `stripe_payment_intent`.
+Requiere la migración `20261018_pagos_desglose.sql` (ya aplicada), que agrega a `Pagos` las columnas `comision`, `descuento`, `tipo` y `stripe_payment_intent`.
 
 Desplegar:
 
 ```bash
-supabase functions deploy crear-pago-reserva
+supabase functions deploy crear-pago-reserva-v2
 supabase functions deploy stripe-webhook --no-verify-jwt   # Stripe no manda JWT
 ```
+
+La función anterior `crear-pago-reserva` (recibe el monto desde la app) sigue desplegada para las instalaciones viejas de la app; se puede eliminar cuando todos usen la versión nueva.
 
 ## 5. Cambios en la app
 
 | Archivo | Cambio |
 |---|---|
-| `ReservaApiClient` | Mandar `{ id_reserva, tipo, horas_extra, cupon }` en lugar de `monto` |
-| `ShoppingCartFragment` | Mostrar el desglose que regresa el servidor; al recibir `Completed`, ya no confirmar la reserva, solo volver a leerla |
-| `HomeFragment` | Igual para la extensión: no hacer `PATCH tiempo_fin` |
+| `ReservaApiClient` | Llama a `crear-pago-reserva-v2` con `{ id_reserva, tipo, horas_extra, cupon }`; `cotizar()` pide solo el desglose |
+| `DesglosePago` | Desglose que regresa el servidor (subtotal, comisión, cupón, descuento y total) |
+| `ShoppingCartFragment` | Muestra el desglose del servidor y valida el cupón con el servidor |
+| `HomeFragment` | El diálogo de extensión muestra el desglose del servidor; después de pagar ya no hace `PATCH tiempo_fin` |
 
 ## 6. Tarjetas de prueba
 

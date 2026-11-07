@@ -65,6 +65,9 @@
 
 
         <activity android:name=".pagos.HistorialActivity" />
+        <activity
+            android:name=".pagos.MetodosPagoActivity"
+            android:exported="false" />
 
         <!-- Recibe el token de FCM y los mensajes push -->
         <service

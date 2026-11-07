@@ -86,7 +86,7 @@
             android:layout_marginBottom="20dp" />
 
         <Button
-            android:id="@+id/btnMetodosPago2"
+            android:id="@+id/btnCerrarSesion"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:backgroundTint="#E0DFDF"
