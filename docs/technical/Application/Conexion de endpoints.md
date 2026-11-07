@@ -85,7 +85,8 @@ Los pagos no los inserta la app: los registra el backend (webhook de Stripe).
 
 | # | Método | Endpoint | Cuerpo | Respuesta | Usado en |
 |---|---|---|---|---|---|
-| F1 | POST | `/functions/v1/crear-pago-reserva` | `{ monto, id_reserva, id_usuario, id_estacionamiento }` | `{ clientSecret, customerId }` | Carrito y extensión |
+| F1 | POST | `/functions/v1/crear-pago-reserva-v2` | `{ id_reserva, tipo, horas_extra?, cupon?, solo_cotizar? }` (el monto lo calcula el servidor) | `{ clientSecret, customerId, desglose }` (o solo `{ desglose }` con `solo_cotizar`) | Carrito y extensión |
 | F2 | POST | `/functions/v1/stripe-webhook` | Evento de Stripe (firmado) | 200 | **Stripe** (no la app) |
+| F3 | POST | `/functions/v1/metodos-pago` | `{ accion, api_version, id_metodo? }` | Depende de la acción; ver [Métodos de pago](Metodos%20de%20pago.md) | Métodos de pago, Carrito y extensión |
 
 

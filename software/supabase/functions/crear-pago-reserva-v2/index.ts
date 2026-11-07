@@ -1,4 +1,5 @@
-// Edge Function: crear-pago-reserva  (issues 10.1 y 12.2)
+// Edge Function: crear-pago-reserva-v2  (issues 10.1 y 12.2)
+// Versión en un solo archivo para desplegar desde el editor del panel de Supabase.
 // La app manda qué quiere pagar; el monto lo calcula el servidor con los datos de la BD.
 //
 // POST  { id_reserva, tipo: "reserva" | "extension", horas_extra?, cupon?, solo_cotizar? }
@@ -6,7 +7,69 @@
 
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { calcularDesglose, TipoPago } from "../_shared/calculo.ts";
+
+// ---------- Cálculo del cobro (incluido aquí para desplegar desde el panel) ----------
+// Fórmula de cobro de SmartParking (issue 12.1).
+// Única fuente de verdad: la app solo muestra lo que calcula el servidor.
+
+type TipoPago = "reserva" | "extension";
+
+const COMISION: Record<TipoPago, number> = {
+  reserva: 0.04,   // 4 %
+  extension: 0.05, // 5 %
+};
+
+// Cupones válidos (solo aplican a reservas)
+const CUPONES: Record<string, number> = {
+  PROMO10: 0.10,
+};
+
+interface Desglose {
+  tipo: TipoPago;
+  horas: number;
+  precio_hora: number;
+  subtotal: number;
+  comision: number;
+  porcentaje_comision: number;
+  cupon: string | null;
+  descuento: number;
+  total: number;
+  total_centavos: number;
+}
+
+const redondear = (n: number) => Math.round(n * 100) / 100;
+
+function calcularDesglose(
+  tipo: TipoPago,
+  horas: number,
+  precioHora: number,
+  cupon?: string | null,
+): Desglose {
+  if (!Number.isInteger(horas) || horas < 1) throw new Error("Horas inválidas");
+
+  const codigo = cupon?.trim().toUpperCase() || null;
+  const pctCupon = tipo === "reserva" && codigo ? CUPONES[codigo] : undefined;
+  if (codigo && pctCupon === undefined) throw new Error("Cupón inválido");
+
+  const subtotal = redondear(horas * precioHora);
+  const comision = redondear(subtotal * COMISION[tipo]);
+  const descuento = pctCupon ? redondear(subtotal * pctCupon) : 0;
+  const total = redondear(subtotal + comision - descuento);
+
+  return {
+    tipo,
+    horas,
+    precio_hora: precioHora,
+    subtotal,
+    comision,
+    porcentaje_comision: COMISION[tipo],
+    cupon: pctCupon ? codigo : null,
+    descuento,
+    total,
+    total_centavos: Math.round(total * 100),
+  };
+}
+// ---------- Fin del cálculo ----------
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

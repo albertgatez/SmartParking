@@ -31,6 +31,8 @@ import com.smartparking.utils.DateTimeUtils;
 import com.smartparking.estacionamientos.Estacionamiento;
 import com.smartparking.R;
 import com.smartparking.reservas.Reserva;
+import com.smartparking.pagos.DesglosePago;
+import com.smartparking.pagos.MetodosPagoApiClient;
 import com.smartparking.pagos.ReservaApiClient;
 import com.smartparking.reservas.ReservaRepository;
 import com.smartparking.reservas.SeleccionReservaActivity;
@@ -48,12 +50,11 @@ public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
     private static final int CAMERA_PERMISSION_REQUEST = 100;
-    private static final double COMISION_EXTENSION = 0.05; // 5% para extensiones
 
     // Stripe
     private PaymentSheet paymentSheet;
     private String clientSecret;
-    private double montoExtension = 0.0;
+    private String customerIdPago; // Cliente de Stripe del PaymentIntent
 
     // Vistas - Estado de reserva
     private TextView tvEstadoReserva;
@@ -408,11 +409,36 @@ public class HomeFragment extends Fragment {
     private void mostrarDialogConfirmacion() {
         if (horasExtension == 0 || reservaActual == null) return;
 
-        // Calcular precios
-        double subtotal = reservaActual.getPrecioHora() * horasExtension;
-        double comision = subtotal * COMISION_EXTENSION;
-        double total = subtotal + comision;
-        this.montoExtension = total; // Guardar el monto para el pago
+        // Los precios los calcula el servidor (misma fórmula con la que se cobra)
+        final int horas = horasExtension;
+        btnAceptarExtension.setEnabled(false);
+        btnAceptarExtension.setText("Calculando...");
+
+        ReservaApiClient.cotizar((long) reservaActual.getId(), ReservaApiClient.TIPO_EXTENSION, horas, null,
+                new ReservaApiClient.CotizacionCallback() {
+                    @Override
+                    public void onSuccess(DesglosePago desglose) {
+                        if (!isAdded()) return;
+                        btnAceptarExtension.setEnabled(horasExtension > 0);
+                        btnAceptarExtension.setText("Aceptar");
+                        if (horas != horasExtension) return; // cambiaron las horas mientras se calculaba
+                        mostrarDialogConfirmacion(desglose);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded()) return;
+                        btnAceptarExtension.setEnabled(horasExtension > 0);
+                        btnAceptarExtension.setText("Aceptar");
+                        Toast.makeText(requireContext(), "No se pudo calcular el precio: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void mostrarDialogConfirmacion(DesglosePago desglose) {
+        double subtotal = desglose.getSubtotal();
+        double comision = desglose.getComision();
+        double total = desglose.getTotal();
 
         // Crear dialog personalizado con el CardView existente
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirmar_extension, null);
@@ -483,8 +509,8 @@ public class HomeFragment extends Fragment {
      * Inicia el proceso de pago para la extensión
      */
     private void iniciarPagoExtension() {
-        if (reservaActual == null || montoExtension <= 0) {
-            Toast.makeText(requireContext(), "Error: Monto inválido.", Toast.LENGTH_SHORT).show();
+        if (reservaActual == null || horasExtension <= 0) {
+            Toast.makeText(requireContext(), "Error: Horas inválidas.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -492,17 +518,18 @@ public class HomeFragment extends Fragment {
         btnAceptarExtension.setEnabled(false);
         btnAceptarExtension.setText("Procesando...");
 
-        // Llamar a la API para obtener el Client Secret
+        // El servidor calcula el monto de la extensión y crea el pago
         ReservaApiClient.obtenerClientSecret(
-                montoExtension,
                 (long) reservaActual.getId(),
-                reservaActual.getIdUsuario(),
-                reservaActual.getIdEstacionamiento(),
+                ReservaApiClient.TIPO_EXTENSION,
+                horasExtension,
+                null,
                 new ReservaApiClient.ClientSecretCallback() {
                     @Override
-                    public void onSuccess(String secret, String customer) {
+                    public void onSuccess(String secret, String customer, DesglosePago desglose) {
                         if (!isAdded()) return;
                         clientSecret = secret;
+                        customerIdPago = customer;
                         presentPaymentSheet();
                     }
 
@@ -518,15 +545,39 @@ public class HomeFragment extends Fragment {
     }
 
     /**
-     * Muestra la interfaz de PaymentSheet de Stripe
+     * Muestra la interfaz de PaymentSheet de Stripe. Antes pide la llave del cliente para
+     * mostrar sus tarjetas guardadas; si falla, se paga como siempre (sin tarjetas guardadas).
      */
     private void presentPaymentSheet() {
-        PaymentSheet.Configuration configuration =
-                new PaymentSheet.Configuration.Builder("Smart Parking - Extensión")
-                        .allowsDelayedPaymentMethods(false)
-                        .build();
+        MetodosPagoApiClient.obtenerLlaveCliente(new MetodosPagoApiClient.LlaveClienteCallback() {
+            @Override
+            public void onSuccess(String customerId, String ephemeralKey) {
+                if (!isAdded()) return;
+                // Las tarjetas guardadas solo sirven si el pago es del mismo cliente de Stripe
+                if (customerId.equals(customerIdPago)) {
+                    mostrarPaymentSheet(new PaymentSheet.CustomerConfiguration(customerId, ephemeralKey));
+                } else {
+                    Log.w(TAG, "El pago no es del mismo cliente de Stripe; se omiten las tarjetas guardadas");
+                    mostrarPaymentSheet(null);
+                }
+            }
 
-        paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
+            @Override
+            public void onError(String error) {
+                if (!isAdded()) return;
+                Log.w(TAG, "Sin tarjetas guardadas: " + error);
+                mostrarPaymentSheet(null);
+            }
+        });
+    }
+
+    private void mostrarPaymentSheet(PaymentSheet.CustomerConfiguration cliente) {
+        PaymentSheet.Configuration.Builder builder =
+                new PaymentSheet.Configuration.Builder("Smart Parking - Extensión")
+                        .allowsDelayedPaymentMethods(false);
+        if (cliente != null) builder.customer(cliente);
+
+        paymentSheet.presentWithPaymentIntent(clientSecret, builder.build());
     }
 
     /**
@@ -556,34 +607,21 @@ public class HomeFragment extends Fragment {
     private void procesarExtensionDespuesDePago() {
         if (reservaActual == null) return;
 
-        // Calcular nuevo tiempo_fin
+        // El webhook de Stripe (stripe-webhook) extiende tiempo_fin en la BD al recibir el pago.
+        // La app ya NO hace el PATCH (si lo hiciera, la extensión se sumaría dos veces);
+        // solo actualiza la reserva guardada en el teléfono.
         String nuevoTiempoFin = calcularNuevoTiempoFin(reservaActual.getTiempoFin(), horasExtension);
+        reservaActual.setTiempoFin(nuevoTiempoFin);
+        reservaRepository.guardarReserva(reservaActual);
+        Log.d(TAG, "Extensión pagada; tiempo_fin local actualizado a " + nuevoTiempoFin);
 
-        // Actualizar en Supabase
-        supabaseClient.extenderReserva(reservaActual.getId(), nuevoTiempoFin,
-                new SupabaseClient.SupabaseCallback() {
-                    @Override
-                    public void onSuccessUsuario() {
-                        Log.d(TAG, "Reserva extendida exitosamente");
-                        // Actualizar reserva local
-                        reservaActual.setTiempoFin(nuevoTiempoFin);
-                        reservaRepository.guardarReserva(reservaActual);
-                        if (!isAdded()) return;
-                        Toast.makeText(requireContext(),
-                                "Tiempo extendido: +" + horasExtension + " hora(s)",
-                                Toast.LENGTH_LONG).show();
+        if (!isAdded()) return;
+        Toast.makeText(requireContext(),
+                "Tiempo extendido: +" + horasExtension + " hora(s)",
+                Toast.LENGTH_LONG).show();
 
-                        // Reiniciar contador
-                        reiniciarHoras();
-                    }
-
-                    @Override
-                    public void onErrorUsuario(String message) {
-                        Log.e(TAG, "Error al extender reserva: " + message);
-                        if (!isAdded()) return;
-                        Toast.makeText(requireContext(), "Error al extender tiempo", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        // Reiniciar contador
+        reiniciarHoras();
     }
 
     // ==================== UTILIDADES ====================

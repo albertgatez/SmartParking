@@ -15,7 +15,7 @@ Una reserva pasa por cuatro etapas: **selección → reserva pendiente → confi
 | `HomeFragment.java` | Estado de la reserva, escaneo del QR y extensión de tiempo |
 | `EstacionamientoBottomSheet.java` | Ficha del estacionamiento en el Mapa; botón "Seleccionar" |
 | `SupabaseClient.java` | Peticiones a la tabla `Reserva` |
-| `ReservaApiClient.java` | Pide a la Edge Function `crear-pago-reserva` la intención de pago de Stripe |
+| `ReservaApiClient.java` | Pide a la Edge Function `crear-pago-reserva-v2` el desglose (`cotizar`) y la intención de pago de Stripe (`obtenerClientSecret`) |
 | `DateTimeUtils.java` | Conversión entre hora local (`America/Mexico_City`) y UTC |
 
 ## Estados de una reserva
@@ -141,9 +141,9 @@ La expiración se revisa en varios momentos, para que se libere aunque el usuari
 
 ## 3. Confirmación (pago)
 
-El Carrito muestra la reserva pendiente con el tiempo restante, el desglose y el botón de pago.
+El Carrito muestra la reserva pendiente con el tiempo restante, el desglose y el botón de pago. El desglose lo calcula el servidor (`crear-pago-reserva-v2` con `solo_cotizar: true`) y el cupón también se valida ahí; la app solo lo muestra.
 
-| Concepto | Cálculo |
+| Concepto | Cálculo (en el servidor) |
 |---|---|
 | Subtotal | `precio por hora × horas` |
 | Comisión | 4 % del subtotal |
@@ -155,20 +155,24 @@ sequenceDiagram
     actor U as Usuario
     participant SC as ShoppingCartFragment
     participant API as ReservaApiClient
-    participant EF as Edge Function crear-pago-reserva
+    participant EF as Edge Function crear-pago-reserva-v2
     participant ST as Stripe
+    participant W as stripe-webhook
     participant R as ReservaRepository
     participant DB as Tabla Reserva
 
     U->>SC: "Confirmar pago"
     SC->>SC: Detiene el temporizador
-    SC->>API: obtenerClientSecret(monto, idReserva, idUsuario, idEstacionamiento)
-    API->>EF: POST /functions/v1/crear-pago-reserva
+    SC->>API: obtenerClientSecret(idReserva, "reserva", cupón)
+    API->>EF: POST /functions/v1/crear-pago-reserva-v2
+    EF->>EF: Calcula el monto y valida el cupón
     EF->>ST: Crea PaymentIntent
-    EF-->>SC: clientSecret
+    EF-->>SC: clientSecret y desglose
     SC->>ST: Abre PaymentSheet
     alt Pago completado
         ST-->>SC: Completed
+        ST->>W: payment_intent.succeeded
+        W->>DB: confirmada = true y registro en Pagos
         SC->>R: confirmarReservaActual()
         R->>DB: PATCH confirmada = true
         R->>R: Quita la expiración y notifica a Inicio
@@ -187,8 +191,8 @@ La extensión aparece en Inicio solo cuando la reserva está confirmada **y** ya
 | Regla | Valor |
 |---|---|
 | Horas que se pueden agregar | 1 a 3 por extensión |
-| Comisión | 5 % del subtotal |
-| Total | `precio por hora × horas + comisión` |
+| Comisión | 5 % del subtotal (calculada en el servidor) |
+| Total | `precio por hora × horas + comisión` (calculado en el servidor) |
 
 ```mermaid
 sequenceDiagram
@@ -197,26 +201,30 @@ sequenceDiagram
     participant C as SupabaseClient
     participant API as ReservaApiClient
     participant ST as Stripe
+    participant W as stripe-webhook
     participant DB as Tabla Reserva
 
     U->>H: Elige horas (+/−) → "Aceptar"
-    H-->>U: Diálogo con subtotal, comisión y total
+    H->>API: cotizar(idReserva, "extension", horas)
+    H-->>U: Diálogo con subtotal, comisión y total del servidor
     U->>H: Confirma
     H->>C: verificarDisponibilidad(cajón, tiempo_fin, tiempo_fin + horas, excluye la propia)
     alt El cajón ya está reservado después
         C-->>H: no disponible
         H-->>U: "El cajón ya está reservado en ese horario. Prueba con menos horas."
     else Disponible
-        H->>API: obtenerClientSecret(monto de la extensión, idReserva, ...)
+        H->>API: obtenerClientSecret(idReserva, "extension", horas)
         H->>ST: Abre PaymentSheet
         ST-->>H: Completed
-        H->>C: extenderReserva(idReserva, nuevo tiempo_fin)
-        C->>DB: PATCH tiempo_fin
+        ST->>W: payment_intent.succeeded
+        W->>DB: tiempo_fin + horas y registro en Pagos
         H->>H: Actualiza la reserva local y reinicia el contador
     end
 ```
 
-La disponibilidad se revisa **antes** de cobrar, para no cobrar horas que el cajón ya no tiene libres.
+La disponibilidad se revisa **antes** de cobrar, para no cobrar horas que el cajón ya no tiene libres (la app y `crear-pago-reserva-v2` la revisan).
+
+`tiempo_fin` en la BD lo extiende **solo el webhook**. La app ya no hace `PATCH tiempo_fin`; si lo hiciera, la extensión se sumaría dos veces.
 
 ## Sincronización con el servidor
 
@@ -242,6 +250,5 @@ Las reservas **pendientes no se recuperan**, porque su tiempo para pagar se cont
 
 - **Expiración desde el servidor:** la reserva pendiente se borra de la BD cuando la app detecta que venció. Si el usuario cierra la app y no la vuelve a abrir, la fila se queda en la BD y el horario aparece ocupado. Se puede resolver con un job programado (`pg_cron`) que borre las reservas con `confirmada = false` y `expiracion < now()`, o filtrando esas filas en las consultas de disponibilidad.
 - **Una reserva por usuario en el servidor:** la regla de una sola reserva se valida en el teléfono. Si se reinstala la app con una reserva pendiente, el servidor permitiría crear otra; conviene validarlo con una restricción o política en la BD.
-- **Confirmación por webhook:** hoy la app marca `confirmada = true` después del pago; en la fase 2 lo hará el webhook de Stripe en el servidor.
-- **Monto calculado en el servidor:** el monto se calcula en la app y se envía a la Edge Function; debería calcularse a partir de la reserva en el servidor.
+- **Confirmación solo por webhook:** el webhook ya confirma la reserva, pero la app todavía hace `PATCH confirmada = true` después del pago. Hay que quitarlo antes de aplicar `rls_etapa2`, que impide a la app confirmar reservas.
 - **Reservar otros días:** la selección solo permite el día de hoy.

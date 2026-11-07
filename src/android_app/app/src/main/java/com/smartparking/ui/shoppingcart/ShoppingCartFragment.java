@@ -3,8 +3,13 @@ package com.smartparking.ui.shoppingcart;
 import com.stripe.android.paymentsheet.PaymentSheet;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
 import com.smartparking.utils.DateTimeUtils;
+import com.smartparking.pagos.DesglosePago;
+import com.smartparking.pagos.MetodoPago;
+import com.smartparking.pagos.MetodosPagoActivity;
+import com.smartparking.pagos.MetodosPagoApiClient;
 import com.smartparking.pagos.ReservaApiClient;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -25,6 +30,7 @@ import com.smartparking.reservas.Reserva;
 import com.smartparking.reservas.ReservaRepository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -35,12 +41,9 @@ import java.util.Locale;
 public class ShoppingCartFragment extends Fragment {
 
     private static final String TAG = "ShoppingCartFragment";
-    private static final double COMISION_PORCENTAJE = 0.04; // 4%
-    private static final String CUPON_DESCUENTO = "PROMO10"; // Cupón hardcodeado
-    private static final double DESCUENTO_CUPON = 0.10; // 10%
     private PaymentSheet paymentSheet;
     private String clientSecret;
-    private double montoTotalFinal = 0.0; // Monto final a pagar
+    private String customerIdPago; // Cliente de Stripe del PaymentIntent
 
     // Vistas
     private LinearLayout layoutReservaActiva, layoutSinReserva;
@@ -56,7 +59,10 @@ public class ShoppingCartFragment extends Fragment {
     // Datos
     private Reserva reservaActual;
     private CountDownTimer countDownTimer;
-    private boolean cuponAplicado = false;
+
+    // Cupón validado por el servidor (null si no hay) y reserva a la que se aplicó
+    private String cuponAplicado = null;
+    private long idReservaCupon = -1;
 
     @Nullable
     @Override
@@ -99,6 +105,10 @@ public class ShoppingCartFragment extends Fragment {
         // Configuracion de botones
         btnConfirmarPago.setOnClickListener(v -> confirmarPago());
         btnAplicarCupon.setOnClickListener(v -> aplicarCupon());
+
+        // La fila de pago abre Perfil > Métodos de pago; al volver, onResume recarga la tarjeta
+        view.findViewById(R.id.filaMetodoPago).setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), MetodosPagoActivity.class)));
     }
 
     private void initViews(View view) {
@@ -160,6 +170,48 @@ public class ShoppingCartFragment extends Fragment {
     }
 
     /**
+     * Muestra la tarjeta que el usuario tiene guardada en Stripe (la más reciente)
+     * o avisa que no tiene ninguna. Al pagar, la tarjeta se elige en el PaymentSheet.
+     */
+    private void cargarMetodoPago() {
+        tvMetodoPago.setText("Cargando...");
+
+        MetodosPagoApiClient.listar(new MetodosPagoApiClient.ListaCallback() {
+            @Override
+            public void onSuccess(List<MetodoPago> metodos) {
+                if (!isAdded()) return;
+                if (metodos.isEmpty()) {
+                    tvMetodoPago.setText("Sin método de pago guardado");
+                    return;
+                }
+                MetodoPago tarjeta = metodos.get(0);
+                String texto = tarjeta.getMarcaVisible() + " •••• " + tarjeta.getUltimos4()
+                        + "  (vence " + tarjeta.getVencimiento() + ")";
+                if (metodos.size() > 1) {
+                    texto += "\n+" + (metodos.size() - 1) + " tarjeta(s) más";
+                }
+                tvMetodoPago.setText(texto);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (!isAdded()) return;
+                Log.w(TAG, "No se pudo cargar el método de pago: " + error);
+                tvMetodoPago.setText("No se pudo cargar el método de pago");
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Por si el usuario agregó o eliminó tarjetas en Perfil > Métodos de pago
+        if (layoutReservaActiva != null && layoutReservaActiva.getVisibility() == View.VISIBLE) {
+            cargarMetodoPago();
+        }
+    }
+
+    /**
      * Muestra la reserva activa con todos sus detalles
      */
     private void mostrarReservaActiva() {
@@ -178,8 +230,8 @@ public class ShoppingCartFragment extends Fragment {
                 horario,
                 cantidadHoras));
 
-        // Método de pago (simulado)
-        tvMetodoPago.setText("Visa **** **** **** 1234");
+        // Tarjeta guardada en Stripe (o aviso de que no tiene)
+        cargarMetodoPago();
 
         // Información de la reserva
         tvNombreEstacionamiento.setText(reservaActual.getNombreEstacionamiento());
@@ -187,9 +239,18 @@ public class ShoppingCartFragment extends Fragment {
         tvPrecioPorHora.setText("Lugar: " + reservaActual.getSeccion() + reservaActual.getNumeroCajon());
         tvTipoCajon.setText(reservaActual.isDiscapacitado() ? "Discapacitado" : "Estándar");
 
-        // Calcular precios
-        calcularYMostrarPrecios(cantidadHoras);
+        // Si es otra reserva, el cupón anterior ya no aplica
+        if (reservaActual.getId() != idReservaCupon) {
+            cuponAplicado = null;
+            idReservaCupon = reservaActual.getId();
+            etCupon.setText("");
+            etCupon.setEnabled(true);
+            btnAplicarCupon.setEnabled(true);
+            tvCuponAplicado.setVisibility(View.GONE);
+        }
 
+        // Precios calculados por el servidor
+        cargarPrecios();
     }
 
     /**
@@ -282,52 +343,101 @@ public class ShoppingCartFragment extends Fragment {
     }
 
     /**
-     * Calcula y muestra el subtotal, comisión y total.
-     * Guarda el total en montoTotalFinal.
+     * Pide al servidor el subtotal, la comisión y el total (con el cupón aplicado, si hay).
+     * La app no calcula precios: solo muestra lo que calcula crear-pago-reserva-v2.
      */
-    private void calcularYMostrarPrecios(int cantidadHoras) {
-        double subtotal = reservaActual.getPrecioHora() * cantidadHoras;
-        double comision = subtotal * COMISION_PORCENTAJE;
-        double descuento = cuponAplicado ? subtotal * DESCUENTO_CUPON : 0;
-        double total = subtotal + comision - descuento;
+    private void cargarPrecios() {
+        if (reservaActual == null) return;
+        final long idReserva = reservaActual.getId();
 
-        this.montoTotalFinal = total; // Guarda el monto final a pagar
+        tvSubtotal.setText("...");
+        tvComision.setText("...");
+        tvTotal.setText("Calculando...");
 
-        tvSubtotal.setText(String.format(Locale.getDefault(), "$%.2f", subtotal));
-        tvComision.setText(String.format(Locale.getDefault(), "$%.2f", comision));
-        tvTotal.setText(String.format(Locale.getDefault(), "$%.2f", total));
+        ReservaApiClient.cotizar(idReserva, ReservaApiClient.TIPO_RESERVA, 0, cuponAplicado,
+                new ReservaApiClient.CotizacionCallback() {
+                    @Override
+                    public void onSuccess(DesglosePago desglose) {
+                        if (!isAdded() || reservaActual == null || reservaActual.getId() != idReserva) return;
+                        mostrarPrecios(desglose);
+                    }
 
-        if (cuponAplicado) {
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded() || reservaActual == null || reservaActual.getId() != idReserva) return;
+                        Log.e(TAG, "No se pudo calcular el precio: " + error);
+                        tvSubtotal.setText("—");
+                        tvComision.setText("—");
+                        tvTotal.setText("—");
+                        Toast.makeText(requireContext(), "No se pudo calcular el precio: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    /**
+     * Muestra el desglose calculado por el servidor.
+     */
+    private void mostrarPrecios(DesglosePago desglose) {
+        tvSubtotal.setText(String.format(Locale.getDefault(), "$%.2f", desglose.getSubtotal()));
+        tvComision.setText(String.format(Locale.getDefault(), "$%.2f", desglose.getComision()));
+        tvTotal.setText(String.format(Locale.getDefault(), "$%.2f", desglose.getTotal()));
+
+        if (desglose.getCupon() != null) {
             tvCuponAplicado.setVisibility(View.VISIBLE);
             tvCuponAplicado.setText(String.format(Locale.getDefault(),
-                    "Descuento (%s): -$%.2f", CUPON_DESCUENTO, descuento));
+                    "Descuento (%s): -$%.2f", desglose.getCupon(), desglose.getDescuento()));
+        } else {
+            tvCuponAplicado.setVisibility(View.GONE);
         }
     }
 
     /**
-     * Aplica un cupón de descuento
+     * Valida el cupón en el servidor. Si es válido, se muestra el nuevo desglose
+     * y el cupón se manda también al crear el pago.
      */
     private void aplicarCupon() {
-        String cuponIngresado = etCupon.getText().toString().trim();
-
-        if (cuponIngresado.equals(CUPON_DESCUENTO)) {
-            cuponAplicado = true;
-            int cantidadHoras = calcularCantidadHoras(reservaActual.getTiempoInicio(), reservaActual.getTiempoFin());
-            calcularYMostrarPrecios(cantidadHoras);
-            Toast.makeText(requireContext(), "Cupón aplicado correctamente", Toast.LENGTH_SHORT).show();
-            etCupon.setEnabled(false);
-            btnAplicarCupon.setEnabled(false);
-        } else {
-            Toast.makeText(requireContext(), "Cupón inválido", Toast.LENGTH_SHORT).show();
+        if (reservaActual == null) return;
+        String cuponIngresado = etCupon.getText().toString().trim().toUpperCase(Locale.ROOT);
+        if (cuponIngresado.isEmpty()) {
+            Toast.makeText(requireContext(), "Escribe un cupón", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        final long idReserva = reservaActual.getId();
+        btnAplicarCupon.setEnabled(false);
+
+        ReservaApiClient.cotizar(idReserva, ReservaApiClient.TIPO_RESERVA, 0, cuponIngresado,
+                new ReservaApiClient.CotizacionCallback() {
+                    @Override
+                    public void onSuccess(DesglosePago desglose) {
+                        if (!isAdded() || reservaActual == null || reservaActual.getId() != idReserva) return;
+                        cuponAplicado = desglose.getCupon();
+                        mostrarPrecios(desglose);
+                        if (cuponAplicado != null) {
+                            Toast.makeText(requireContext(), "Cupón aplicado correctamente", Toast.LENGTH_SHORT).show();
+                            etCupon.setEnabled(false);
+                        } else {
+                            Toast.makeText(requireContext(), "Cupón inválido", Toast.LENGTH_SHORT).show();
+                            btnAplicarCupon.setEnabled(true);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded()) return;
+                        btnAplicarCupon.setEnabled(true);
+                        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     /**
      * Inicia el proceso de pago llamando al backend para obtener el Client Secret de Stripe.
+     * El monto lo calcula el servidor; la app solo manda la reserva y el cupón.
      */
     private void confirmarPago() {
-        if (reservaActual == null || montoTotalFinal <= 0) {
-            Toast.makeText(requireContext(), "Error: Reserva o monto inválido.", Toast.LENGTH_SHORT).show();
+        if (reservaActual == null) {
+            Toast.makeText(requireContext(), "Error: No hay reserva para pagar.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -338,15 +448,17 @@ public class ShoppingCartFragment extends Fragment {
 
         // Llama al API para obtener el Client Secret
         ReservaApiClient.obtenerClientSecret(
-                montoTotalFinal,
                 (long) reservaActual.getId(),
-                reservaActual.getIdUsuario(),
-                reservaActual.getIdEstacionamiento(),
+                ReservaApiClient.TIPO_RESERVA,
+                0,
+                cuponAplicado,
                 new ReservaApiClient.ClientSecretCallback() {
                     @Override
-                    public void onSuccess(String secret, String customer) {
+                    public void onSuccess(String secret, String customer, DesglosePago desglose) {
                         if (!isAdded()) return;
                         clientSecret = secret;
+                        customerIdPago = customer;
+                        mostrarPrecios(desglose); // Lo que se va a cobrar
                         presentPaymentSheet(); // 2. Mostrar la interfaz de Stripe
                     }
 
@@ -363,15 +475,39 @@ public class ShoppingCartFragment extends Fragment {
     }
 
     /**
-     * Muestra la interfaz de PaymentSheet de Stripe
+     * Muestra la interfaz de PaymentSheet de Stripe. Antes pide la llave del cliente para
+     * mostrar sus tarjetas guardadas; si falla, se paga como siempre (sin tarjetas guardadas).
      */
     private void presentPaymentSheet() {
-        PaymentSheet.Configuration configuration =
-                new PaymentSheet.Configuration.Builder("Smart Parking")
-                        .allowsDelayedPaymentMethods(false)
-                        .build();
+        MetodosPagoApiClient.obtenerLlaveCliente(new MetodosPagoApiClient.LlaveClienteCallback() {
+            @Override
+            public void onSuccess(String customerId, String ephemeralKey) {
+                if (!isAdded()) return;
+                // Las tarjetas guardadas solo sirven si el pago es del mismo cliente de Stripe
+                if (customerId.equals(customerIdPago)) {
+                    mostrarPaymentSheet(new PaymentSheet.CustomerConfiguration(customerId, ephemeralKey));
+                } else {
+                    Log.w(TAG, "El pago no es del mismo cliente de Stripe; se omiten las tarjetas guardadas");
+                    mostrarPaymentSheet(null);
+                }
+            }
 
-        paymentSheet.presentWithPaymentIntent(clientSecret, configuration);
+            @Override
+            public void onError(String error) {
+                if (!isAdded()) return;
+                Log.w(TAG, "Sin tarjetas guardadas: " + error);
+                mostrarPaymentSheet(null);
+            }
+        });
+    }
+
+    private void mostrarPaymentSheet(PaymentSheet.CustomerConfiguration cliente) {
+        PaymentSheet.Configuration.Builder builder =
+                new PaymentSheet.Configuration.Builder("Smart Parking")
+                        .allowsDelayedPaymentMethods(false);
+        if (cliente != null) builder.customer(cliente);
+
+        paymentSheet.presentWithPaymentIntent(clientSecret, builder.build());
     }
 
     /**

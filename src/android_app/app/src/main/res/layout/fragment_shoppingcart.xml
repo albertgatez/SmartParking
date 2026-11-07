@@ -104,12 +104,17 @@
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp">
 
+                <!-- Toda la fila abre Perfil > Métodos de pago -->
                 <LinearLayout
+                    android:id="@+id/filaMetodoPago"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
 
                     <TextView
                         android:layout_width="80dp"
@@ -124,7 +129,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Visa **** **** **** 1234"
+                        android:text="Cargando..."
                         android:textSize="14sp"
                         android:textColor="#666666" />
 
@@ -132,7 +137,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_chevron_right"
-                        android:contentDescription="Ver más"
+                        android:contentDescription="Ver métodos de pago"
                         app:tint="#CCCCCC" />
 
                 </LinearLayout>
@@ -194,7 +199,7 @@
                         android:id="@+id/tvCuponAplicado"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Descuento (PROMO10): -$10.00"
+                        android:text=""
                         android:textSize="12sp"
                         android:textColor="#4CAF50"
                         android:visibility="gone"

@@ -55,4 +55,4 @@ Estacionamiento con `precio_hora` = $20.00:
 
 ## 6. Estado actual
 
-Los porcentajes y la fórmula ya están en la app (`ShoppingCartFragment.COMISION_PORCENTAJE = 0.04` y `HomeFragment.COMISION_EXTENSION = 0.05`). En el issue 12.2 el cálculo pasa al backend para que la app solo muestre los montos.
+El cálculo está en el backend, en la Edge Function `crear-pago-reserva-v2` (`software/supabase/functions/crear-pago-reserva-v2/index.ts`, función `calcularDesglose`). La app ya no tiene porcentajes ni cupones: pide el desglose con `solo_cotizar: true` para mostrarlo en el Carrito y en el diálogo de extensión, y el mismo cálculo se usa al crear el pago. Un cupón solo se aplica si el servidor lo valida.

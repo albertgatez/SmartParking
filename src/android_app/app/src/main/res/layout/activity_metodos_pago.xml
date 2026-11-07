@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F5F5F5"
+    tools:context=".pagos.MetodosPagoActivity">
+
+    <!-- Título -->
+    <TextView
+        android:id="@+id/txtMetodosTitulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Métodos de pago"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:paddingBottom="4dp"
+        android:textColor="#2E2E2E" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tus tarjetas se guardan de forma segura en Stripe."
+        android:textSize="14sp"
+        android:paddingBottom="10dp"
+        android:textColor="#555555" />
+
+    <!-- Línea divisoria -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Contenido: lista, vacío, error o carga -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerMetodos"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp"
+            tools:listitem="@layout/item_metodo_pago" />
+
+        <TextView
+            android:id="@+id/txtSinTarjetas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="No tienes tarjetas guardadas"
+            android:textSize="16sp"
+            android:textColor="#555555"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layoutError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/txtError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="No se pudieron cargar tus tarjetas."
+                android:textSize="15sp"
+                android:textColor="#B03A2E" />
+
+            <Button
+                android:id="@+id/btnReintentar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="#E0DFDF"
+                android:text="Reintentar"
+                android:textColor="#0094FD" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressCarga"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/btnAgregarTarjeta"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#0095FF"
+        android:text="Agregar tarjeta"
+        android:textAllCaps="true"
+        android:textColor="@android:color/white" />
+
+</LinearLayout>
