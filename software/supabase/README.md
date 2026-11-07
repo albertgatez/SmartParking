@@ -14,7 +14,8 @@ Esta carpeta está en `software/supabase/`. Si se usa la CLI de Supabase, los co
 | Archivo | Contenido | Issue | Estado |
 |---|---|---|---|
 | `20261018_logica_negocio.sql` | Restricción contra reservas traslapadas, validaciones al reservar y limpieza de reservas pendientes con `pg_cron` | 8.3 | Aplicada el 19/10/2026 |
-| `20261018_rls_politicas.sql` | Políticas RLS por usuario | 8.2 | Pendiente |
+| `20261106_rls_etapa1.sql` | RLS etapa 1: cada usuario solo modifica sus reservas; los cajones solo los modifica el gateway; vista `horarios_ocupados` | 8.2 | Aplicada el 06/11/2026 |
+| `20261106_rls_etapa2.sql` | RLS etapa 2: cada usuario solo ve sus reservas; la app ya no puede confirmar reservas | 8.2 | Pendiente |
 | `20261018_pagos_desglose.sql` | Llave primaria y desglose de pagos (subtotal, comisión, descuento) | 10.1, 12.2 | Pendiente |
 | `20261018_notificaciones.sql` | Tablas de dispositivos y notificaciones, avisos programados | 11.1, 11.2 | Pendiente |
 
@@ -30,7 +31,8 @@ Cada migración se aplica **una sola vez**. Si se vuelve a ejecutar, marca error
 
 | Migración | Requisito |
 |---|---|
-| `rls_politicas` | El gateway de la Raspberry debe usar la llave secreta (`service_role`) en su `.env`, y la app debe consultar la disponibilidad desde la vista `horarios_ocupados` |
+| `rls_etapa1` | El gateway de la Raspberry debe usar la llave secreta (`sb_secret_...`) en su `.env` |
+| `rls_etapa2` | La app consulta la disponibilidad desde la vista `horarios_ocupados`, y el webhook de Stripe ya confirma las reservas |
 | `pagos_desglose` | Desplegar las Edge Functions de `functions/` |
 | `notificaciones` | Proyecto de Firebase creado y Edge Function `enviar-notificacion` desplegada |
 
