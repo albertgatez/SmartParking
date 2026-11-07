@@ -67,7 +67,7 @@ sequenceDiagram
 
 ## 4. Implementación de referencia
 
-Incluida en `supabase/functions/` (propuesta para reemplazar las funciones actuales, que no se pudieron descargar del proyecto):
+Incluida en `/software/supabase/functions/` (propuesta para reemplazar las funciones actuales, que no se pudieron descargar del proyecto):
 
 | Archivo | Qué hace |
 |---|---|
