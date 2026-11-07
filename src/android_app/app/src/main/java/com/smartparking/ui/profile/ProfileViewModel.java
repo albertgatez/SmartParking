@@ -20,11 +20,12 @@ import com.smartparking.network.ApiClient;
 import com.smartparking.login.InicioSesion;
 import com.smartparking.R;
 import com.smartparking.reservas.ReservaRepository;
+import com.smartparking.notificaciones.FcmTokenManager;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.*;
+import okhttp3.*; 
 
 import java.io.IOException;
 
@@ -148,6 +149,9 @@ public class ProfileViewModel extends ViewModel {
 
     // Cerrar sesión
     public void cerrarSesion(Context context) {
+        // Quita el token del servidor mientras todavía hay sesión
+        FcmTokenManager.limpiarTokenAlCerrarSesion();
+
         // Limpiar caché de Glide
         try {
             Glide.get(context).clearMemory();

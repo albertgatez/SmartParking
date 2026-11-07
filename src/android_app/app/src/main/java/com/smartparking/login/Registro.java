@@ -13,6 +13,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.smartparking.ui.MainActivity;
 import com.smartparking.R;
 import com.smartparking.network.SupabaseClient;
+import com.smartparking.notificaciones.FcmTokenManager;
+import com.smartparking.notificaciones.NotificacionesApiClient;
 
 public class Registro extends AppCompatActivity {
     private EditText edtCorreo, edtContrasena, edtNombre, edtConfirmarContrasena, edtFolioDiscapacidad;
@@ -103,6 +105,13 @@ public class Registro extends AppCompatActivity {
                             @Override
                             public void onSuccessUsuario() {
                                 runOnUiThread(() -> {
+                                    // Usuario nuevo: guarda el token de FCM y, cuando ya quedó guardado,
+                                    // pide al servidor la notificación de bienvenida. Va en segundo plano
+                                    // y no usa la Activity, así que sigue aunque se cierre esta pantalla.
+                                    FcmTokenManager.registrarTokenActual(exito -> {
+                                        if (exito) NotificacionesApiClient.solicitarBienvenida();
+                                    });
+
                                     Intent intent = new Intent(Registro.this, MainActivity.class);
                                     // Estas flags limpian todo el stack de actividades anteriores
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

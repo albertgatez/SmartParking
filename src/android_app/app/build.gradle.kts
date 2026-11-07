@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services) // Firebase: lee app/google-services.json
 }
 
 android {
@@ -82,4 +83,8 @@ dependencies {
 
     // ZXing para escaneo de QR
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    // Firebase Cloud Messaging (notificaciones). Con el BoM no se pone versión en los SDK de Firebase.
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }

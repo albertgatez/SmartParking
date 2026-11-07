@@ -1,10 +1,16 @@
 package com.smartparking.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -14,6 +20,7 @@ import com.smartparking.R;
 import com.smartparking.databinding.ActivityMainBinding;
 import com.smartparking.login.InicioSesion;
 import com.smartparking.login.SessionManager;
+import com.smartparking.notificaciones.FcmTokenManager;
 import com.smartparking.reservas.ReservaRepository;
 
 public class MainActivity extends AppCompatActivity {
@@ -21,6 +28,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ReservaRepository reservaRepo;
     private NavController navController;
+
+    // Permiso de notificaciones (Android 13+). Debe registrarse antes de que la Activity inicie.
+    private final ActivityResultLauncher<String> permisoNotificaciones =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    concedido -> Log.d(TAG, "Permiso de notificaciones concedido: " + concedido));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
         reservaRepo.verificarExpiracion();
         reservaRepo.sincronizarConServidor(SessionManager.getUserId());
 
+        // Notificaciones: permiso y token de FCM del usuario (el token puede cambiar entre sesiones)
+        pedirPermisoNotificaciones();
+        FcmTokenManager.registrarTokenActual(null);
+
         manejarNavegacion(getIntent());
     }
 
@@ -59,6 +75,15 @@ public class MainActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         manejarNavegacion(intent);
+    }
+
+    /** En Android 13+ las notificaciones necesitan permiso del usuario. */
+    private void pedirPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= 33
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            permisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS);
+        }
     }
 
     /** Permite que otras pantallas abran directamente una pestaña (ej. el carrito tras reservar). */
