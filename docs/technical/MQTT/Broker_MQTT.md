@@ -31,9 +31,6 @@ allow_anonymous false
 password_file /etc/mosquitto/passwd
 acl_file /etc/mosquitto/acl
 
-persistence true
-persistence_location /var/lib/mosquitto/
-
 log_dest syslog
 log_type error
 log_type warning
@@ -47,7 +44,7 @@ connection_messages true
 | `allow_anonymous` | `false` | Todo cliente debe autenticarse con usuario y contraseña |
 | `password_file` | `/etc/mosquitto/passwd` | Contraseñas cifradas (hash), generadas con `mosquitto_passwd` |
 | `acl_file` | `/etc/mosquitto/acl` | Qué puede publicar o leer cada usuario |
-| `persistence` | `true` | Los mensajes retenidos sobreviven a un reinicio del broker |
+| `persistence` | `true` (en el `mosquitto.conf` de Debian) | Los mensajes retenidos sobreviven a un reinicio del broker |
 | `connection_messages` | `true` | Registra en el log cada conexión y desconexión |
 
 ## 3. Usuarios y permisos
