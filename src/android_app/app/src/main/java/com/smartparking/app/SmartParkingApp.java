@@ -4,6 +4,7 @@ import android.app.Application;
 import android.util.Log;
 
 import com.smartparking.login.SessionManager;
+import com.smartparking.notificaciones.NotificationHelper;
 import com.stripe.android.PaymentConfiguration;
 import com.smartparking.BuildConfig;
 
@@ -18,6 +19,9 @@ public class SmartParkingApp extends Application {
         super.onCreate();
 
         SessionManager.init(this);
+
+        // Canal de notificaciones (obligatorio para mostrar notificaciones en Android 8+)
+        NotificationHelper.crearCanales(this);
 
         // Stripe se configura una sola vez para toda la app.
         // La llave publicable se lee de local.properties (STRIPE_PUBLISHABLE_KEY).
