@@ -96,14 +96,12 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAgregarTarjeta"
+        style="@style/Widget.SmartParking.BotonPrincipal"
+        app:backgroundTint="@color/sp_primary_blue"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#0095FF"
-        android:text="Agregar tarjeta"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white" />
+        android:text="Agregar tarjeta" />
 
 </LinearLayout>

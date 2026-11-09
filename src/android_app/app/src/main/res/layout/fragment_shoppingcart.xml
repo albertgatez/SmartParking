@@ -363,11 +363,11 @@
             </LinearLayout>
 
             <!-- Botón confirmar pago -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConfirmarPago"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:backgroundTint="@color/app_action"
+                style="@style/Widget.SmartParking.BotonPrincipal"
                 android:text="Continuar al pago"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"

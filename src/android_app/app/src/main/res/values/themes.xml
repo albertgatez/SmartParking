@@ -15,4 +15,15 @@
         <item name="android:windowBackground">@color/app_background</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Botón principal de acción (Continuar, Agregar tarjeta): mismo redondeo y color en toda la app -->
+    <style name="Widget.SmartParking.BotonPrincipal" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="backgroundTint">@color/sp_primary_blue</item>
+        <item name="cornerRadius">28dp</item>
+    </style>
 </resources>

@@ -20,7 +20,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.smartparking.R;
 
 /**
- * Pinta la barra de estado con el azul de marca en todas las pantallas.
+ * Pinta la barra de estado con el azul de marca y deja libre el espacio de las barras
+ * del sistema (estado y navegación) para que los botones no queden debajo.
  * Desde Android 15 (API 35) la app se dibuja de punta a punta y el sistema ignora
  * statusBarColor; por eso el color se aplica con EdgeToEdge y el contenido se baja
  * debajo de la barra para que no quede tapado.
@@ -51,9 +52,16 @@ public final class BarraDeEstado {
                 // Las pantallas que ya manejan sus insets (fitsSystemWindows) no se tocan
                 if (raiz.getFitsSystemWindows()) return;
 
+                // Se suma al padding que ya tenga el layout, para no perder sus márgenes
+                int pIzq = raiz.getPaddingLeft();
+                int pSup = raiz.getPaddingTop();
+                int pDer = raiz.getPaddingRight();
+                int pInf = raiz.getPaddingBottom();
+
                 ViewCompat.setOnApplyWindowInsetsListener(raiz, (v, insets) -> {
-                    Insets barras = insets.getInsets(WindowInsetsCompat.Type.statusBars());
-                    v.setPadding(v.getPaddingLeft(), barras.top, v.getPaddingRight(), v.getPaddingBottom());
+                    Insets barras = insets.getInsets(
+                            WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.navigationBars());
+                    v.setPadding(pIzq, pSup + barras.top, pDer, pInf + barras.bottom);
                     return insets;
                 });
             }
