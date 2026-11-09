@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@android:color/white">
+    android:background="@color/app_surface">
 
     <!-- Indicador visual del bottom sheet -->
     <View
@@ -13,8 +13,8 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:background="#CCCCCC"
-        android:backgroundTint="#E0E0E0" />
+        android:background="@color/app_border"
+        android:backgroundTint="@color/app_surface_variant" />
 
     <!-- RecyclerView para el carrusel de imágenes -->
     <androidx.cardview.widget.CardView
@@ -55,7 +55,7 @@
         android:text="Estacionamiento Forum Tlaquepaque"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
+        android:textColor="@color/app_text_primary"
         android:layout_marginBottom="8dp" />
 
     <!-- Distancia -->
@@ -80,7 +80,7 @@
             android:layout_height="wrap_content"
             android:text="1,2 millas"
             android:textSize="14sp"
-            android:textColor="#666666" />
+            android:textColor="@color/app_text_secondary" />
 
     </LinearLayout>
 
@@ -92,7 +92,7 @@
         android:text="$25.50 por hora"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
+        android:textColor="@color/app_text_primary"
         android:layout_marginBottom="16dp" />
 
     <!-- Botón Seleccionar -->

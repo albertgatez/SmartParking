@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="6dp"
     app:cardElevation="4dp"
-    app:cardBackgroundColor="#FFFFFF"
+    app:cardBackgroundColor="@color/app_surface"
     app:cardCornerRadius="14dp"
     app:cardUseCompatPadding="true">
 
@@ -31,7 +31,7 @@
                 android:text="Visa"
                 android:textStyle="bold"
                 android:textSize="17sp"
-                android:textColor="#2E2E2E" />
+                android:textColor="@color/app_text_primary" />
 
             <!-- Últimos 4 dígitos -->
             <TextView
@@ -41,7 +41,7 @@
                 android:layout_marginTop="4dp"
                 android:text="•••• 4242"
                 android:textSize="16sp"
-                android:textColor="#1A5276" />
+                android:textColor="@color/app_accent_text" />
 
             <!-- Vencimiento -->
             <TextView
@@ -51,7 +51,7 @@
                 android:layout_marginTop="4dp"
                 android:text="Vence 12/28"
                 android:textSize="14sp"
-                android:textColor="#555555" />
+                android:textColor="@color/app_text_secondary" />
         </LinearLayout>
 
         <ImageButton

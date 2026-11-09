@@ -54,6 +54,7 @@ android {
 dependencies {
 
     implementation(libs.appcompat)
+    implementation("androidx.activity:activity:1.9.3")
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.lifecycle.livedata.ktx)

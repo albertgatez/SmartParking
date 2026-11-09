@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="12dp"
     app:cardElevation="8dp"
-    app:cardBackgroundColor="#FFFFFF"
+    app:cardBackgroundColor="@color/app_surface"
     app:cardCornerRadius="14dp"
     app:cardUseCompatPadding="true">
 
@@ -30,7 +30,7 @@
                 android:text="Reserva #1234"
                 android:textStyle="bold"
                 android:textSize="17sp"
-                android:textColor="#2E2E2E" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:id="@+id/txtEstadoPago"
@@ -40,8 +40,8 @@
                 android:textStyle="bold"
                 android:textSize="13sp"
                 android:padding="4dp"
-                android:background="#D5F5E3"
-                android:textColor="#1E8449" />
+                android:background="@color/app_success_bg"
+                android:textColor="@color/app_success_text" />
         </LinearLayout>
 
         <!-- Monto -->
@@ -53,7 +53,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="6dp"
-            android:textColor="#1A5276" />
+            android:textColor="@color/app_accent_text" />
 
         <!-- Fecha -->
         <TextView
@@ -63,7 +63,7 @@
             android:text="Fecha: 2024-01-01"
             android:textSize="14sp"
             android:layout_marginTop="6dp"
-            android:textColor="#555555" />
+            android:textColor="@color/app_text_secondary" />
 
     </LinearLayout>
 

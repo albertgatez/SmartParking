@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="@color/app_surface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:text="No hay reservas pendientes de pago"
                 android:textSize="16sp"
-                android:textColor="#666666"
+                android:textColor="@color/app_text_secondary"
                 android:gravity="center" />
 
         </LinearLayout>
@@ -80,7 +80,7 @@
                         android:layout_height="wrap_content"
                         android:text="Horario"
                         android:textSize="14sp"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:textStyle="bold" />
 
                     <TextView
@@ -90,7 +90,7 @@
                         android:layout_weight="1"
                         android:text="$25.50/hr | Estándar\n16:00 - 18:59 | 3 horas"
                         android:textSize="14sp"
-                        android:textColor="#666666" />
+                        android:textColor="@color/app_text_secondary" />
 
                 </LinearLayout>
 
@@ -121,7 +121,7 @@
                         android:layout_height="wrap_content"
                         android:text="PAGO"
                         android:textSize="14sp"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:textStyle="bold" />
 
                     <TextView
@@ -131,7 +131,7 @@
                         android:layout_weight="1"
                         android:text="Cargando..."
                         android:textSize="14sp"
-                        android:textColor="#666666" />
+                        android:textColor="@color/app_text_secondary" />
 
                     <ImageView
                         android:layout_width="24dp"
@@ -163,7 +163,7 @@
                         android:layout_height="wrap_content"
                         android:text="PROMOCIONES"
                         android:textSize="14sp"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:textStyle="bold"
                         android:layout_marginBottom="8dp" />
 
@@ -189,7 +189,7 @@
                             android:layout_height="36dp"
                             android:text="Aplicar"
                             android:textSize="12sp"
-                            android:backgroundTint="#00BCD4"
+                            android:backgroundTint="@color/app_action"
                             android:textColor="#FFFFFF"
                             style="?android:attr/borderlessButtonStyle" />
 
@@ -201,7 +201,7 @@
                         android:layout_height="wrap_content"
                         android:text=""
                         android:textSize="12sp"
-                        android:textColor="#4CAF50"
+                        android:textColor="@color/app_success_text"
                         android:visibility="gone"
                         android:layout_marginTop="8dp" />
 
@@ -216,7 +216,7 @@
                 android:text="Reserva"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#333333"
+                android:textColor="@color/app_text_primary"
                 android:layout_marginBottom="12dp" />
 
             <androidx.cardview.widget.CardView
@@ -245,7 +245,7 @@
                             android:text="Forum Tlaquepaque"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#333333"
+                            android:textColor="@color/app_text_primary"
                             android:layout_marginBottom="4dp" />
 
                         <TextView
@@ -254,7 +254,7 @@
                             android:layout_height="wrap_content"
                             android:text="Sección: A"
                             android:textSize="12sp"
-                            android:textColor="#666666"
+                            android:textColor="@color/app_text_secondary"
                             android:layout_marginBottom="2dp" />
 
                         <TextView
@@ -263,7 +263,7 @@
                             android:layout_height="wrap_content"
                             android:text="Lugar: 4"
                             android:textSize="12sp"
-                            android:textColor="#666666" />
+                            android:textColor="@color/app_text_secondary" />
 
                     </LinearLayout>
 
@@ -274,7 +274,7 @@
                         android:text="$25.50"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:layout_gravity="center_vertical" />
 
                 </LinearLayout>
@@ -285,7 +285,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E0E0E0"
+                android:background="@color/app_surface_variant"
                 android:layout_marginVertical="16dp" />
 
             <LinearLayout
@@ -300,7 +300,7 @@
                     android:layout_weight="1"
                     android:text="Subtotal (2)"
                     android:textSize="14sp"
-                    android:textColor="#666666" />
+                    android:textColor="@color/app_text_secondary" />
 
                 <TextView
                     android:id="@+id/tvSubtotal"
@@ -308,7 +308,7 @@
                     android:layout_height="wrap_content"
                     android:text="$76.50"
                     android:textSize="14sp"
-                    android:textColor="#666666" />
+                    android:textColor="@color/app_text_secondary" />
 
             </LinearLayout>
 
@@ -324,7 +324,7 @@
                     android:layout_weight="1"
                     android:text="Comisión 4%"
                     android:textSize="14sp"
-                    android:textColor="#666666" />
+                    android:textColor="@color/app_text_secondary" />
 
                 <TextView
                     android:id="@+id/tvComision"
@@ -332,7 +332,7 @@
                     android:layout_height="wrap_content"
                     android:text="$3.06"
                     android:textSize="14sp"
-                    android:textColor="#666666" />
+                    android:textColor="@color/app_text_secondary" />
 
             </LinearLayout>
 
@@ -349,7 +349,7 @@
                     android:text="Total"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333" />
+                    android:textColor="@color/app_text_primary" />
 
                 <TextView
                     android:id="@+id/tvTotal"
@@ -358,7 +358,7 @@
                     android:text="$79.56"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333" />
+                    android:textColor="@color/app_text_primary" />
 
             </LinearLayout>
 
@@ -367,7 +367,7 @@
                 android:id="@+id/btnConfirmarPago"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:backgroundTint="#00BCD4"
+                android:backgroundTint="@color/app_action"
                 android:text="Continuar al pago"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"

@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@android:color/white">
+        android:background="@color/app_surface">
 
         <!-- Carrusel de imágenes -->
         <androidx.cardview.widget.CardView
@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:text="Estacionamiento"
                 android:textSize="12sp"
-                android:textColor="#999999"
+                android:textColor="@color/app_text_hint"
                 android:layout_marginBottom="4dp" />
 
             <TextView
@@ -71,7 +71,7 @@
                 android:text="Forum Tlaquepaque"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#333333"
+                android:textColor="@color/app_text_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -81,7 +81,7 @@
                 android:text="$25.50/hr"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#00BCD4" />
+                android:textColor="@color/app_accent_text" />
 
         </LinearLayout>
 

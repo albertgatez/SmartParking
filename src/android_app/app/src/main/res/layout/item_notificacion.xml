@@ -6,7 +6,7 @@
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
     android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="#FFFFFF"
+    app:cardBackgroundColor="@color/app_surface"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Reserva confirmada"
-                android:textColor="#333333"
+                android:textColor="@color/app_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Tu reserva está confirmada."
-                android:textColor="#666666"
+                android:textColor="@color/app_text_secondary"
                 android:textSize="14sp" />
 
             <TextView
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="06/11/2026 18:30"
-                android:textColor="#999999"
+                android:textColor="@color/app_text_hint"
                 android:textSize="12sp" />
 
         </LinearLayout>

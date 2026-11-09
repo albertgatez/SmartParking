@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/app_background"
     tools:context=".ui.home.HomeFragment">
 
     <LinearLayout
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
-            app:cardBackgroundColor="#FFFFFF"
+            app:cardBackgroundColor="@color/app_surface"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -43,7 +43,7 @@
                     android:layout_weight="1"
                     android:layout_marginStart="12dp"
                     android:text="Escanear boleto de estacionamiento"
-                    android:textColor="#333333"
+                    android:textColor="@color/app_text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:visibility="visible"
-            app:cardBackgroundColor="#FFFFFF"
+            app:cardBackgroundColor="@color/app_surface"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -92,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@color/app_surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -108,7 +108,7 @@
                         android:text="Tu Reserva Activa"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:layout_marginBottom="12dp" />
 
                     <TextView
@@ -117,7 +117,7 @@
                         android:layout_height="wrap_content"
                         android:text="Forum Tlaquepaque"
                         android:textSize="16sp"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:layout_marginBottom="4dp" />
 
                     <TextView
@@ -126,7 +126,7 @@
                         android:layout_height="wrap_content"
                         android:text="Sección A - Cajón 4"
                         android:textSize="14sp"
-                        android:textColor="#666666"
+                        android:textColor="@color/app_text_secondary"
                         android:layout_marginBottom="4dp" />
 
                     <TextView
@@ -135,7 +135,7 @@
                         android:layout_height="wrap_content"
                         android:text="16:00 - 18:59 (3 horas)"
                         android:textSize="14sp"
-                        android:textColor="#666666"
+                        android:textColor="@color/app_text_secondary"
                         android:layout_marginBottom="4dp" />
 
                     <TextView
@@ -145,7 +145,7 @@
                         android:text="$25.50/hr"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#00BCD4" />
+                        android:textColor="@color/app_accent_text" />
 
                 </LinearLayout>
 
@@ -165,7 +165,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@color/app_surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -181,7 +181,7 @@
                         android:text="Extender Tiempo de Reserva"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#333333"
+                        android:textColor="@color/app_text_primary"
                         android:layout_marginBottom="16dp" />
 
                     <LinearLayout
@@ -207,7 +207,7 @@
                             android:text="0"
                             android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#333333"
+                            android:textColor="@color/app_text_primary"
                             android:gravity="center" />
 
                         <ImageButton
@@ -233,7 +233,7 @@
                             android:layout_height="wrap_content"
                             android:text="Reiniciar"
                             android:textAllCaps="false"
-                            android:backgroundTint="#9E9E9E"
+                            android:backgroundTint="#757575"
                             android:textColor="#FFFFFF"
                             android:layout_marginEnd="8dp" />
 
@@ -243,7 +243,7 @@
                             android:layout_height="wrap_content"
                             android:text="Aceptar"
                             android:textAllCaps="false"
-                            android:backgroundTint="#00BCD4"
+                            android:backgroundTint="@color/app_action"
                             android:textColor="#FFFFFF"
                             android:enabled="false" />
 
@@ -254,7 +254,7 @@
                         android:layout_height="wrap_content"
                         android:text="Máximo 3 horas • Comisión 5%"
                         android:textSize="12sp"
-                        android:textColor="#999999"
+                        android:textColor="@color/app_text_hint"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -270,7 +270,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:text="Estacionamientos Disponibles"
-            android:textColor="#333333"
+            android:textColor="@color/app_text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
