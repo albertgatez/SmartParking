@@ -22,7 +22,9 @@ import com.smartparking.reservas.Reserva;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -85,6 +87,12 @@ public class SupabaseClient {
 
     public interface SupabaseCallbackDisponibilidad {
         void onResultado(boolean disponible);
+        void onError(String message);
+    }
+
+    public interface SupabaseCallbackCajones {
+        /** id de la reserva (como texto) -> "Sección X - Cajón Y" */
+        void onSuccess(Map<String, String> cajonPorReserva);
         void onError(String message);
     }
 
@@ -870,6 +878,55 @@ public class SupabaseClient {
                     enMain(() -> callback.onSuccess(resultado));
                 } catch (Exception e) {
                     Log.e(TAG, "Error al parsear historial", e);
+                    enMain(() -> callback.onError("Error al procesar datos"));
+                }
+            }
+        });
+    }
+
+    /**
+     * Obtiene el cajón de cada reserva del usuario (solo las propias, por RLS).
+     * La tabla Pagos guarda la reserva pero no el cajón, así que se consulta aquí.
+     */
+    public void obtenerCajonesDeReservas(String userId, SupabaseCallbackCajones callback) {
+        Request request = new Request.Builder()
+                .url(rest("Reserva")
+                        .addQueryParameter("id_usuario", "eq." + userId)
+                        .addQueryParameter("select", "id,Cajon(numero_cajon,seccion)")
+                        .build())
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Error de conexión al obtener cajones", e);
+                enMain(() -> callback.onError("Error de conexión"));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String body = texto(response);
+                if (!response.isSuccessful()) {
+                    Log.e(TAG, "Error cajones " + response.code() + ": " + body);
+                    enMain(() -> callback.onError("Error HTTP " + response.code()));
+                    return;
+                }
+                try {
+                    JsonArray array = gson.fromJson(body, JsonArray.class);
+                    Map<String, String> cajones = new HashMap<>();
+                    if (array != null) {
+                        for (JsonElement el : array) {
+                            JsonObject reserva = el.getAsJsonObject();
+                            if (!tiene(reserva, "Cajon") || !reserva.get("Cajon").isJsonObject()) continue;
+                            JsonObject cajon = reserva.getAsJsonObject("Cajon");
+                            cajones.put(String.valueOf(entero(reserva, "id")),
+                                    "Sección " + str(cajon, "seccion") + " - Cajón " + str(cajon, "numero_cajon"));
+                        }
+                    }
+                    enMain(() -> callback.onSuccess(cajones));
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parseando cajones", e);
                     enMain(() -> callback.onError("Error al procesar datos"));
                 }
             }
