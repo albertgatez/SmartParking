@@ -1,0 +1,4 @@
+﻿Fecha,Estacionamiento,Cajón,Tipo,Subtotal,Comisión,Descuento,Total,ID de pago
+20/10/2026 12:30,"Plaza Ejemplo, Centro",Sección A - Cajón 12,Reserva,250.00,10.00,25.00,235.00,101
+21/10/2026 04:00,Estacionamiento 2,,Extensión de tiempo,,,,90.50,102
+22/10/2026 09:15,"Plaza Ejemplo, Centro",Sección B - Cajón 3,Reserva,120.00,4.80,0.00,124.80,103

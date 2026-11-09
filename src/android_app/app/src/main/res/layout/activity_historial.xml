@@ -46,8 +46,12 @@
 
     </androidx.cardview.widget.CardView>
 
+    <!-- Exportar el historial del usuario como CSV y compartirlo -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnExportar"
+        style="@style/Widget.SmartParking.BotonPrincipal"
+        android:layout_width="match_parent"
+        android:layout_marginTop="4dp"
+        android:text="Exportar y compartir" />
+
 </LinearLayout>
-
-
-
-
