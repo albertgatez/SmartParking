@@ -27,7 +27,7 @@
                 android:text="Extender tiempo: +"
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:id="@+id/tvHorasExtensionDialog"
@@ -36,7 +36,7 @@
                 android:text="1"
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -44,14 +44,14 @@
                 android:text=" hr"
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/app_surface_variant"
             android:layout_marginBottom="12dp" />
 
         <!-- Toda la fila abre el selector de tarjeta -->
@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:text="PAGO"
                 android:textSize="14sp"
-                android:textColor="#333333"
+                android:textColor="@color/app_text_primary"
                 android:textStyle="bold" />
 
             <TextView
@@ -81,7 +81,7 @@
                 android:layout_weight="1"
                 android:text="Cargando..."
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
             <ImageView
                 android:layout_width="24dp"
@@ -97,7 +97,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginVertical="8dp"
-            android:background="#E0E0E0" />
+            android:background="@color/app_surface_variant" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -111,7 +111,7 @@
                 android:text="Subtotal: "
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
             <Space
                 android:layout_width="0dp"
@@ -124,7 +124,7 @@
                 android:text=""
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
             <TextView
                 android:id="@+id/tvSubtotalDialog"
@@ -133,7 +133,7 @@
                 android:text="25.00"
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
         </LinearLayout>
 
@@ -149,7 +149,7 @@
                 android:text="Comisión 5%: "
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
             <Space
                 android:layout_width="0dp"
@@ -162,7 +162,7 @@
                 android:text=""
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
             <TextView
                 android:id="@+id/tvComisionDialog"
@@ -171,14 +171,14 @@
                 android:text="1.25"
                 android:textStyle="normal"
                 android:textSize="14sp"
-                android:textColor="#666666" />
+                android:textColor="@color/app_text_secondary" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/app_surface_variant"
             android:layout_marginVertical="8dp" />
 
         <LinearLayout
@@ -193,7 +193,7 @@
                 android:text="Total: "
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
             <Space
                 android:layout_width="0dp"
@@ -206,7 +206,7 @@
                 android:text=""
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:id="@+id/tvTotalDialog"
@@ -215,7 +215,7 @@
                 android:text="26.25"
                 android:textStyle="bold"
                 android:textSize="16sp"
-                android:textColor="#333333" />
+                android:textColor="@color/app_text_primary" />
 
         </LinearLayout>
 
@@ -227,7 +227,7 @@
             android:textColor="#FFFFFF"
             android:textAllCaps="false"
             android:textStyle="bold"
-            android:backgroundTint="#00BCD4"
+            android:backgroundTint="@color/app_action"
             app:cornerRadius="8dp"
             android:layout_gravity="center" />
 

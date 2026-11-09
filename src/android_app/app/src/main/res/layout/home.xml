@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/app_surface">
 
     <!-- Contenedor principal -->
     <LinearLayout
@@ -83,7 +83,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:text="Av. Centro #123"
-                            android:textColor="#606060"
+                            android:textColor="@color/app_text_secondary"
                             android:textSize="14sp" />
 
                         <TextView
@@ -91,7 +91,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
                             android:text="Detalles"
-                            android:textColor="#222"
+                            android:textColor="@color/app_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -109,7 +109,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:text="Detalles"
-                        android:textColor="#222"
+                        android:textColor="@color/app_text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -118,7 +118,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="• Acceso 24/7\n• CCTV activo\n• Entrada especial para motos\n• Altura máxima 2.1 m"
-                        android:textColor="#555"
+                        android:textColor="@color/app_text_secondary"
                         android:textSize="13sp" />
 
                     <TextView

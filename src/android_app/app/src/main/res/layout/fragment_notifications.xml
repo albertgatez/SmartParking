@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/app_background"
     tools:context=".ui.notifications.NotificationsFragment">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -29,7 +29,7 @@
         android:gravity="center"
         android:padding="32dp"
         android:text="No tienes avisos todavía"
-        android:textColor="#666666"
+        android:textColor="@color/app_text_secondary"
         android:textSize="16sp"
         android:visibility="gone" />
 

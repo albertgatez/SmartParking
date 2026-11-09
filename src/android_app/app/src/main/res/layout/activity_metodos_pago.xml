@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#F5F5F5"
+    android:background="@color/app_background"
     tools:context=".pagos.MetodosPagoActivity">
 
     <!-- Título -->
@@ -18,7 +18,7 @@
         android:textSize="22sp"
         android:textStyle="bold"
         android:paddingBottom="4dp"
-        android:textColor="#2E2E2E" />
+        android:textColor="@color/app_text_primary" />
 
     <TextView
         android:id="@+id/txtMetodosSubtitulo"
@@ -27,13 +27,13 @@
         android:text="Tus tarjetas se guardan de forma segura en Stripe."
         android:textSize="14sp"
         android:paddingBottom="10dp"
-        android:textColor="#555555" />
+        android:textColor="@color/app_text_secondary" />
 
     <!-- Línea divisoria -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#CCCCCC"
+        android:background="@color/app_border"
         android:layout_marginBottom="10dp" />
 
     <!-- Contenido: lista, vacío, error o carga -->
@@ -58,7 +58,7 @@
             android:gravity="center"
             android:text="No tienes tarjetas guardadas"
             android:textSize="16sp"
-            android:textColor="#555555"
+            android:textColor="@color/app_text_secondary"
             android:visibility="gone" />
 
         <LinearLayout
@@ -84,9 +84,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:backgroundTint="#E0DFDF"
+                android:backgroundTint="@color/app_surface_variant"
                 android:text="Reintentar"
-                android:textColor="#0094FD" />
+                android:textColor="@color/app_accent_text" />
         </LinearLayout>
 
         <ProgressBar
@@ -98,25 +98,21 @@
     </FrameLayout>
 
     <!-- Solo en modo selección (desde el Carrito o la extensión) -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnUsarTarjeta"
+        style="@style/Widget.SmartParking.BotonPrincipal"
+        app:backgroundTint="@color/sp_primary_blue"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#0095FF"
         android:text="Pagar con esta tarjeta"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white"
         android:visibility="gone" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAgregarTarjeta"
+        style="@style/Widget.SmartParking.BotonPrincipal"
+        app:backgroundTint="@color/sp_primary_blue"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#0095FF"
-        android:text="Agregar tarjeta"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white" />
+        android:text="Agregar tarjeta" />
 
 </LinearLayout>

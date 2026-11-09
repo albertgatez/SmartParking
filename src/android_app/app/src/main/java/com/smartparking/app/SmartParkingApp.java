@@ -20,6 +20,9 @@ public class SmartParkingApp extends Application {
 
         SessionManager.init(this);
 
+        // Barra de estado azul también en Android 15+ (edge-to-edge)
+        BarraDeEstado.registrar(this);
+
         // Canal de notificaciones (obligatorio para mostrar notificaciones en Android 8+)
         NotificationHelper.crearCanales(this);
 
