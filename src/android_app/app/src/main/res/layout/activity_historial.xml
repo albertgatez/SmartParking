@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#F5F5F5">
+    android:background="@color/app_background">
 
     <!-- Título -->
     <TextView
@@ -16,13 +16,13 @@
         android:textSize="22sp"
         android:textStyle="bold"
         android:paddingBottom="10dp"
-        android:textColor="#2E2E2E" />
+        android:textColor="@color/app_text_primary" />
 
     <!-- Línea divisoria -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#CCCCCC"
+        android:background="@color/app_border"
         android:layout_marginBottom="10dp" />
 
     <!-- Contenedor con sombra -->
@@ -33,7 +33,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         app:cardElevation="6dp"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/app_surface"
         app:cardCornerRadius="12dp"
         app:cardUseCompatPadding="true">
 

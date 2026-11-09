@@ -3,7 +3,7 @@
     <style name="Theme.SmartParking" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/sp_primary_blue</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorPrimaryVariant">@color/sp_primary_blue</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
@@ -11,6 +11,19 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Fondo de la app en modo claro. -->
+        <item name="android:windowBackground">@color/app_background</item>
         <!-- Customize your theme here. -->
+    </style>
+
+    <!-- Botón principal de acción (Continuar, Agregar tarjeta): mismo redondeo y color en toda la app -->
+    <style name="Widget.SmartParking.BotonPrincipal" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="backgroundTint">@color/sp_primary_blue</item>
+        <item name="cornerRadius">28dp</item>
     </style>
 </resources>

@@ -89,10 +89,10 @@
             android:id="@+id/btnCerrarSesion"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:backgroundTint="#E0DFDF"
+            android:backgroundTint="@color/app_surface_variant"
             android:text="Cerrar sesión"
             android:textAllCaps="true"
-            android:textColor="#0094FD" />
+            android:textColor="@color/app_accent_text" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

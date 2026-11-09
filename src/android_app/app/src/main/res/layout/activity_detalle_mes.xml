@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@color/app_surface"
     tools:context=".DetalleMesActivity">
 
     <ScrollView
@@ -38,7 +38,7 @@
                 android:text="Historial"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
 
             <ImageView
                 android:id="@+id/profile_image_detalle"
@@ -65,7 +65,7 @@
             android:text="Ana Sofía"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/app_text_primary" />
 
         <TextView
             android:id="@+id/text_periodo_detalle"
@@ -76,25 +76,25 @@
             android:paddingBottom="16dp"
             android:text="Periodo Octubre 2025"
             android:textSize="16sp"
-            android:textColor="@android:color/darker_gray" />
+            android:textColor="@color/app_text_hint" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0" />
+            android:background="@color/app_surface_variant" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="16dp"
-            android:background="#F8F8F8"> <TextView
+            android:background="@color/app_surface"> <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Día"
             android:textStyle="bold"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:layout_width="0dp"
@@ -102,7 +102,7 @@
                 android:layout_weight="1"
                 android:text="Tiempo"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:layout_width="0dp"
@@ -110,7 +110,7 @@
                 android:layout_weight="2"
                 android:text="Lugar"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:layout_width="0dp"
@@ -119,7 +119,7 @@
                 android:text="Total"
                 android:textStyle="bold"
                 android:gravity="end"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -133,7 +133,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
+            android:background="@color/app_surface_variant"
             android:layout_marginTop="8dp" />
 
         <RelativeLayout
@@ -147,7 +147,7 @@
                 android:text="Total del mes"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
 
             <TextView
                 android:id="@+id/text_total_mes"
@@ -157,7 +157,7 @@
                 android:text="$375.36"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="@color/app_text_primary" />
         </RelativeLayout>
 
         <View
@@ -183,7 +183,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:background="@android:color/white"
+        android:background="@color/app_surface"
         android:layout_alignParentBottom="true"
         android:elevation="8dp">
     </LinearLayout>

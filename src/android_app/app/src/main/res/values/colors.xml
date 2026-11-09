@@ -8,4 +8,18 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="icon_gray">#FFC4C2C2</color>
+    <!-- Tokens de superficies y texto: el valor cambia según el modo claro u oscuro -->
+    <color name="app_background">#FFE9EEF4</color>
+    <color name="app_surface">#FFFFFFFF</color>
+    <color name="app_surface_variant">#FFE3E8EE</color>
+    <color name="app_border">#FFC5CED8</color>
+    <color name="app_text_primary">#FF1A1A1A</color>
+    <color name="app_text_secondary">#FF4A4A4A</color>
+    <color name="app_text_hint">#FF6B6B6B</color>
+    <color name="app_accent_text">#FF0059D6</color>
+    <color name="app_success_text">#FF1B7A3E</color>
+    <color name="app_success_bg">#FFD5F5E3</color>
+    <color name="app_alert_bg">#FFFFEBEE</color>
+    <!-- Botones de acción con texto blanco: contraste suficiente en ambos modos -->
+    <color name="app_action">#FF0077B6</color>
 </resources>
