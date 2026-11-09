@@ -1,6 +1,7 @@
 package com.smartparking.ui.home;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,6 +15,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
@@ -25,14 +28,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-import com.stripe.android.paymentsheet.PaymentSheet;
+import com.stripe.android.PaymentConfiguration;
+import com.stripe.android.model.ConfirmPaymentIntentParams;
+import com.stripe.android.payments.paymentlauncher.PaymentLauncher;
+import com.stripe.android.payments.paymentlauncher.PaymentResult;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
 import com.smartparking.utils.DateTimeUtils;
 import com.smartparking.estacionamientos.Estacionamiento;
 import com.smartparking.R;
 import com.smartparking.reservas.Reserva;
 import com.smartparking.pagos.DesglosePago;
+import com.smartparking.pagos.MetodoPago;
+import com.smartparking.pagos.MetodosPagoActivity;
 import com.smartparking.pagos.MetodosPagoApiClient;
+import com.smartparking.pagos.PreferenciasPago;
 import com.smartparking.pagos.ReservaApiClient;
 import com.smartparking.reservas.ReservaRepository;
 import com.smartparking.reservas.SeleccionReservaActivity;
@@ -52,9 +61,13 @@ public class HomeFragment extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST = 100;
 
     // Stripe
-    private PaymentSheet paymentSheet;
+    private PaymentLauncher paymentLauncher;
     private String clientSecret;
-    private String customerIdPago; // Cliente de Stripe del PaymentIntent
+
+    // Método de pago: la tarjeta guardada con la que se va a pagar (null = no tiene o no cargó)
+    private MetodoPago metodoSeleccionado = null;
+    private ActivityResultLauncher<Intent> seleccionTarjetaLauncher;
+    private TextView tvMetodoPagoDialog; // fila PAGO del diálogo de extensión abierto
 
     // Vistas - Estado de reserva
     private TextView tvEstadoReserva;
@@ -86,6 +99,27 @@ public class HomeFragment extends Fragment {
     private Reserva reservaActual;
     private EstacionamientosHomeAdapter estacionamientosAdapter;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Debe registrarse antes de que el fragment se cree
+        seleccionTarjetaLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        String id = result.getData().getStringExtra(MetodosPagoActivity.EXTRA_ID_METODO);
+                        // Se guarda para que no se pierda al cambiar de pestaña
+                        if (reservaActual != null) {
+                            PreferenciasPago.setTarjeta(requireContext(), reservaActual.getId(), id);
+                        }
+                    }
+                    // Recarga la fila PAGO del diálogo (pudo elegir, agregar o eliminar tarjetas)
+                    if (dialogConfirmacion != null && dialogConfirmacion.isShowing()) {
+                        cargarMetodoPago();
+                    }
+                });
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -102,8 +136,10 @@ public class HomeFragment extends Fragment {
         initViews(view);
         setupRecyclerView();
 
-        // Inicializar PaymentSheet
-        paymentSheet = new PaymentSheet(this, this::onPaymentSheetResult);
+        // Launcher de Stripe para pagar la extensión con la tarjeta guardada elegida
+        PaymentConfiguration stripeConfig = PaymentConfiguration.getInstance(requireContext());
+        paymentLauncher = PaymentLauncher.Companion.create(this,
+                stripeConfig.getPublishableKey(), stripeConfig.getStripeAccountId(), this::onPaymentResult);
 
         // Obtener Repository y SupabaseClient
         reservaRepository = ReservaRepository.getInstance(requireContext());
@@ -461,10 +497,79 @@ public class HomeFragment extends Fragment {
         dialogConfirmacion = builder.create();
         dialogConfirmacion.show();
 
+        // Método de pago: la tarjeta predeterminada (o la que eligió); al tocar, se abre
+        // Métodos de pago para elegir otra o agregar una
+        tvMetodoPagoDialog = dialogView.findViewById(R.id.tvMetodoPago);
+        cargarMetodoPago();
+        dialogView.findViewById(R.id.filaMetodoPagoDialog).setOnClickListener(v -> abrirSelectorTarjeta(null));
+
         btnConfirmar.setOnClickListener(v -> {
+            if (metodoSeleccionado == null) {
+                Toast.makeText(requireContext(), "Elige o agrega una tarjeta para pagar", Toast.LENGTH_SHORT).show();
+                abrirSelectorTarjeta("Agrega o elige la tarjeta con la que vas a pagar la extensión.");
+                return;
+            }
             dialogConfirmacion.dismiss();
             verificarDisponibilidadExtension();
         });
+    }
+
+    /**
+     * Carga las tarjetas guardadas y muestra en el diálogo la que eligió el usuario en
+     * Métodos de pago (si sigue existiendo) o, si no eligió, la predeterminada.
+     */
+    private void cargarMetodoPago() {
+        final TextView destino = tvMetodoPagoDialog;
+        if (destino == null) return;
+        destino.setText("Cargando...");
+
+        MetodosPagoApiClient.listar(new MetodosPagoApiClient.ListaCallback() {
+            @Override
+            public void onSuccess(List<MetodoPago> metodos) {
+                if (!isAdded()) return;
+                // La tarjeta elegida para esta reserva (guardada en el teléfono), si sigue existiendo
+                String idElegida = reservaActual != null
+                        ? PreferenciasPago.getTarjeta(requireContext(), reservaActual.getId()) : null;
+                MetodoPago elegida = MetodoPago.buscarPorId(metodos, idElegida);
+                metodoSeleccionado = elegida != null ? elegida : MetodoPago.buscarPredeterminada(metodos);
+                destino.setText(MetodoPago.textoFilaPago(metodoSeleccionado));
+            }
+
+            @Override
+            public void onError(String error) {
+                if (!isAdded()) return;
+                Log.w(TAG, "No se pudo cargar el método de pago: " + error);
+                metodoSeleccionado = null;
+                destino.setText("No se pudo cargar el método de pago\nToca para reintentar");
+            }
+        });
+    }
+
+    /** Abre Métodos de pago en modo selección: ver tarjetas, elegir con cuál pagar o agregar otra. */
+    private void abrirSelectorTarjeta(@Nullable String mensaje) {
+        String idActual = metodoSeleccionado != null ? metodoSeleccionado.getId() : null;
+        seleccionTarjetaLauncher.launch(MetodosPagoActivity.intentSeleccion(requireContext(), idActual, mensaje));
+    }
+
+    /**
+     * Confirma el pago con la tarjeta guardada elegida (Stripe pide 3D Secure si la tarjeta
+     * lo necesita).
+     */
+    private void cobrar(MetodoPago tarjeta) {
+        Log.d(TAG, "Pagando la extensión con la tarjeta guardada " + tarjeta.getId());
+        paymentLauncher.confirm(ConfirmPaymentIntentParams.createWithPaymentMethodId(
+                tarjeta.getId(), clientSecret));
+    }
+
+    /** Resultado del pago; se convierte a PaymentSheetResult para reutilizar el mismo manejo. */
+    private void onPaymentResult(PaymentResult result) {
+        if (result instanceof PaymentResult.Completed) {
+            onPaymentSheetResult(PaymentSheetResult.Completed.INSTANCE);
+        } else if (result instanceof PaymentResult.Canceled) {
+            onPaymentSheetResult(PaymentSheetResult.Canceled.INSTANCE);
+        } else if (result instanceof PaymentResult.Failed) {
+            onPaymentSheetResult(new PaymentSheetResult.Failed(((PaymentResult.Failed) result).getThrowable()));
+        }
     }
 
     /**
@@ -513,6 +618,13 @@ public class HomeFragment extends Fragment {
             Toast.makeText(requireContext(), "Error: Horas inválidas.", Toast.LENGTH_SHORT).show();
             return;
         }
+        final MetodoPago tarjeta = metodoSeleccionado;
+        if (tarjeta == null) {
+            btnAceptarExtension.setEnabled(true);
+            btnAceptarExtension.setText("Aceptar");
+            Toast.makeText(requireContext(), "Elige o agrega una tarjeta para pagar", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         // Deshabilitar botón temporalmente
         btnAceptarExtension.setEnabled(false);
@@ -529,8 +641,7 @@ public class HomeFragment extends Fragment {
                     public void onSuccess(String secret, String customer, DesglosePago desglose) {
                         if (!isAdded()) return;
                         clientSecret = secret;
-                        customerIdPago = customer;
-                        presentPaymentSheet();
+                        cobrar(tarjeta); // Con la tarjeta elegida
                     }
 
                     @Override
@@ -545,42 +656,6 @@ public class HomeFragment extends Fragment {
     }
 
     /**
-     * Muestra la interfaz de PaymentSheet de Stripe. Antes pide la llave del cliente para
-     * mostrar sus tarjetas guardadas; si falla, se paga como siempre (sin tarjetas guardadas).
-     */
-    private void presentPaymentSheet() {
-        MetodosPagoApiClient.obtenerLlaveCliente(new MetodosPagoApiClient.LlaveClienteCallback() {
-            @Override
-            public void onSuccess(String customerId, String ephemeralKey) {
-                if (!isAdded()) return;
-                // Las tarjetas guardadas solo sirven si el pago es del mismo cliente de Stripe
-                if (customerId.equals(customerIdPago)) {
-                    mostrarPaymentSheet(new PaymentSheet.CustomerConfiguration(customerId, ephemeralKey));
-                } else {
-                    Log.w(TAG, "El pago no es del mismo cliente de Stripe; se omiten las tarjetas guardadas");
-                    mostrarPaymentSheet(null);
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                if (!isAdded()) return;
-                Log.w(TAG, "Sin tarjetas guardadas: " + error);
-                mostrarPaymentSheet(null);
-            }
-        });
-    }
-
-    private void mostrarPaymentSheet(PaymentSheet.CustomerConfiguration cliente) {
-        PaymentSheet.Configuration.Builder builder =
-                new PaymentSheet.Configuration.Builder("Smart Parking - Extensión")
-                        .allowsDelayedPaymentMethods(false);
-        if (cliente != null) builder.customer(cliente);
-
-        paymentSheet.presentWithPaymentIntent(clientSecret, builder.build());
-    }
-
-    /**
      * Maneja el resultado del flujo de Stripe
      */
     private void onPaymentSheetResult(PaymentSheetResult result) {
@@ -590,6 +665,7 @@ public class HomeFragment extends Fragment {
 
         if (result instanceof PaymentSheetResult.Completed) {
             Toast.makeText(requireContext(), "¡Pago realizado! Extendiendo tiempo...", Toast.LENGTH_LONG).show();
+            PreferenciasPago.limpiar(requireContext()); // ya se pagó; la próxima vez usa la predeterminada
             procesarExtensionDespuesDePago();
         } else if (result instanceof PaymentSheetResult.Canceled) {
             Log.d(TAG, "Pago de extensión cancelado.");

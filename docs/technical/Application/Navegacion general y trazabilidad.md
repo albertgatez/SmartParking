@@ -149,7 +149,7 @@ Revisión de cada pantalla contra el criterio de terminado ("se puede recorrer l
 | Inicio (4 estados de reserva) | Completa | |
 | Mapa y ficha del estacionamiento | Completa | |
 | Selección de cajón y horario | Completa | |
-| Carrito | Completa | El método de pago muestra la tarjeta guardada más reciente del usuario (o "Sin método de pago guardado") y al tocarlo abre Métodos de pago; ver [Métodos de pago](Metodos%20de%20pago.md). Los precios y el cupón los calcula el servidor (`crear-pago-reserva-v2`). |
+| Carrito | Completa | El método de pago muestra la tarjeta predeterminada del usuario (o "Sin método de pago guardado") y al tocarlo permite elegir otra tarjeta, pagar con una nueva o administrar las tarjetas; ver [Métodos de pago](Metodos%20de%20pago.md). Los precios y el cupón los calcula el servidor (`crear-pago-reserva-v2`). |
 | Avisos | Completa | Lista de avisos del usuario; ver [Notificaciones](Notificaciones.md). |
 | Perfil | Completa | |
 | Perfil → "Métodos de pago" | Completa | Lista, agrega y elimina tarjetas guardadas en Stripe; ver [Métodos de pago](Metodos%20de%20pago.md). |
@@ -158,13 +158,12 @@ Revisión de cada pantalla contra el criterio de terminado ("se puede recorrer l
 | **Imágenes de estacionamientos sin foto** | **Dependencia externa** | Si no hay foto, se usa `via.placeholder.com`, un servicio externo que ya no responde; conviene usar un recurso local. |
 | Layouts sin usar | No accesibles | `activity_detalle_mes.xml` y `home.xml` no los usa ninguna clase; se pueden borrar. (`perfil_activity.xml`, `HomeViewModel` y `ShoppingCartViewModel` ya se borraron.) |
 
-**Resultado:** ya no hay pantallas muertas: la pestaña **Avisos** y el botón **Métodos de pago** tienen pantallas reales. El Carrito muestra la tarjeta guardada del usuario y los precios y el cupón se calculan en el servidor. Para cumplir el criterio completo quedan dos puntos pendientes, que se revisarán después.
+**Resultado:** ya no hay pantallas muertas: la pestaña **Avisos** y el botón **Métodos de pago** tienen pantallas reales. El Carrito y el diálogo de extensión muestran la tarjeta predeterminada del usuario y permiten elegir otra, y los precios y el cupón se calculan en el servidor. Para cumplir el criterio completo queda un punto pendiente, que se revisará después.
 
 ## Pendiente
 
-Pendientes del criterio de terminado (se revisarán después):
+Pendiente del criterio de terminado (se revisará después):
 
-- **Método de pago fijo en el diálogo de extensión:** el diálogo sigue mostrando "Tarjeta de Crédito"; puede usar lo mismo que el Carrito (la tarjeta guardada o "Sin método de pago guardado").
 - **Imágenes de `via.placeholder.com`:** usar las imágenes locales `ic_placeholder_image` e `ic_error_image` cuando un estacionamiento no tiene fotos o no se pudieron cargar (`EstacionamientoBottomSheet` y `EstacionamientosHomeAdapter`).
 
 Otros pendientes:

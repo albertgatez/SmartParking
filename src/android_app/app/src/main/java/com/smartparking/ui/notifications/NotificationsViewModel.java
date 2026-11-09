@@ -8,6 +8,7 @@ import com.smartparking.login.SessionManager;
 import com.smartparking.notificaciones.Notificacion;
 import com.smartparking.notificaciones.NotificacionesApiClient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationsViewModel extends ViewModel {
@@ -27,6 +28,67 @@ public class NotificationsViewModel extends ViewModel {
 
     public LiveData<String> getError() {
         return error;
+    }
+
+    /** Para avisar a la pantalla si quitar o restaurar un aviso falló. */
+    public interface ResultadoCallback {
+        void onError(String mensaje);
+    }
+
+    /**
+     * Quita el aviso de la lista de inmediato y lo marca como oculto en el servidor.
+     * Si el servidor falla, el aviso vuelve a su lugar.
+     * @return la posición que tenía, para poder deshacer.
+     */
+    public int ocultar(Notificacion aviso, ResultadoCallback callback) {
+        List<Notificacion> actual = notificaciones.getValue();
+        if (actual == null) return -1;
+        int posicion = actual.indexOf(aviso);
+        if (posicion < 0) return -1;
+
+        List<Notificacion> nueva = new ArrayList<>(actual);
+        nueva.remove(posicion);
+        notificaciones.setValue(nueva);
+
+        NotificacionesApiClient.cambiarOculta(aviso.getId(), true, new NotificacionesApiClient.AccionCallback() {
+            @Override
+            public void onSuccess() { }
+
+            @Override
+            public void onError(String mensaje) {
+                insertar(aviso, posicion);
+                callback.onError(mensaje);
+            }
+        });
+        return posicion;
+    }
+
+    /** Deshacer: vuelve a mostrar el aviso en la posición que tenía. */
+    public void restaurar(Notificacion aviso, int posicion, ResultadoCallback callback) {
+        insertar(aviso, posicion);
+        NotificacionesApiClient.cambiarOculta(aviso.getId(), false, new NotificacionesApiClient.AccionCallback() {
+            @Override
+            public void onSuccess() { }
+
+            @Override
+            public void onError(String mensaje) {
+                List<Notificacion> actual = notificaciones.getValue();
+                if (actual != null) {
+                    List<Notificacion> nueva = new ArrayList<>(actual);
+                    nueva.remove(aviso);
+                    notificaciones.setValue(nueva);
+                }
+                callback.onError(mensaje);
+            }
+        });
+    }
+
+    private void insertar(Notificacion aviso, int posicion) {
+        List<Notificacion> actual = notificaciones.getValue();
+        List<Notificacion> nueva = actual != null ? new ArrayList<>(actual) : new ArrayList<>();
+        if (nueva.contains(aviso)) return;
+        nueva.add(Math.max(0, Math.min(posicion, nueva.size())), aviso);
+        notificaciones.setValue(nueva);
     }
 
     /** Vuelve a pedir los avisos del usuario con sesión iniciada. */

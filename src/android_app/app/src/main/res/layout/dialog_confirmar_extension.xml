@@ -54,12 +54,17 @@
             android:background="@color/app_surface_variant"
             android:layout_marginBottom="12dp" />
 
+        <!-- Toda la fila abre el selector de tarjeta -->
         <LinearLayout
+            android:id="@+id/filaMetodoPagoDialog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="16dp"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
 
             <TextView
                 android:layout_width="80dp"
@@ -74,7 +79,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Tarjeta de Crédito"
+                android:text="Cargando..."
                 android:textSize="14sp"
                 android:textColor="@color/app_text_secondary" />
 
@@ -82,7 +87,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_chevron_right"
-                android:contentDescription="Ver más"
+                android:contentDescription="Elegir método de pago"
                 app:tint="#CCCCCC" />
 
         </LinearLayout>

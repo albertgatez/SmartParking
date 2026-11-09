@@ -68,6 +68,10 @@
         <activity
             android:name=".pagos.MetodosPagoActivity"
             android:exported="false" />
+        <activity
+            android:name=".pagos.AgregarTarjetaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Recibe el token de FCM y los mensajes push -->
         <service

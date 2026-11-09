@@ -9,8 +9,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import android.widget.Toast;
 
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.smartparking.databinding.FragmentNotificationsBinding;
 import com.smartparking.notificaciones.Notificacion;
 
@@ -36,9 +41,29 @@ public class NotificationsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        adapter = new NotificationsAdapter();
+        // La X de cada aviso lo quita
+        adapter = new NotificationsAdapter(this::quitarAviso);
         binding.rvNotificaciones.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvNotificaciones.setAdapter(adapter);
+
+        // Deslizar un aviso a la derecha también lo quita
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh,
+                                  @NonNull RecyclerView.ViewHolder destino) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int direccion) {
+                Notificacion aviso = adapter.getItem(vh.getBindingAdapterPosition());
+                if (aviso != null) {
+                    quitarAviso(aviso);
+                } else {
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        }).attachToRecyclerView(binding.rvNotificaciones);
 
         viewModel.getNotificaciones().observe(getViewLifecycleOwner(), lista -> {
             adapter.actualizar(lista);
@@ -53,6 +78,21 @@ public class NotificationsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         viewModel.cargar();
+    }
+
+    /** Quita el aviso y ofrece deshacer durante unos segundos. */
+    private void quitarAviso(Notificacion aviso) {
+        int posicion = viewModel.ocultar(aviso, this::mostrarErrorAviso);
+        if (posicion < 0 || binding == null) return;
+
+        Snackbar.make(binding.getRoot(), "Aviso eliminado", Snackbar.LENGTH_LONG)
+                .setAction("Deshacer", v -> viewModel.restaurar(aviso, posicion, this::mostrarErrorAviso))
+                .show();
+    }
+
+    private void mostrarErrorAviso(String mensaje) {
+        if (!isAdded()) return;
+        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
     }
 
     /** Decide qué se ve: la lista, el indicador de carga o el mensaje de vacío / error. */

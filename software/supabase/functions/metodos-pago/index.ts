@@ -6,10 +6,13 @@
 //   cd software && supabase functions deploy metodos-pago
 //
 // POST { accion, api_version, id_metodo? }
-//   "listar"        200 { metodos: [{ id, marca, ultimos4, mes_exp, anio_exp }] }
+//   "listar"        200 { metodos: [{ id, marca, ultimos4, mes_exp, anio_exp, predeterminada }] }
 //   "preparar_alta" 200 { setupIntentClientSecret, customerId, ephemeralKey }
 //   "llave_cliente" 200 { customerId, ephemeralKey }
 //   "eliminar"      200 { eliminado: true }
+//   "predeterminar" 200 { predeterminada: "pm_..." }
+// La tarjeta predeterminada se guarda en Stripe (customer.invoice_settings.default_payment_method).
+// Si el usuario tiene tarjetas y ninguna es predeterminada, "listar" marca la más reciente.
 // Errores: { error } con 400, 401, 403, 404, 405 o 500.
 //
 // Secretos: STRIPE_SECRET_KEY. SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los inyecta Supabase.
@@ -20,7 +23,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-const ACCIONES = ["listar", "preparar_alta", "llave_cliente", "eliminar"] as const;
+const ACCIONES = ["listar", "preparar_alta", "llave_cliente", "eliminar", "predeterminar"] as const;
 type Accion = typeof ACCIONES[number];
 
 // Versión de la API de Stripe que manda el SDK de Android, por ejemplo "2020-03-02"
@@ -77,6 +80,40 @@ async function crearLlaveCliente(customerId: string, apiVersion: string): Promis
   return llave.secret!;
 }
 
+/** Valida el id y verifica que la tarjeta pertenezca al cliente; si no, lanza 400, 403 o 404. */
+async function verificarDueno(idMetodo: unknown, customerId: string): Promise<string> {
+  if (typeof idMetodo !== "string" || !idMetodo.startsWith("pm_")) {
+    throw new ErrorHttp(400, "id_metodo inválido");
+  }
+
+  let metodo: Stripe.PaymentMethod;
+  try {
+    metodo = await stripe.paymentMethods.retrieve(idMetodo);
+  } catch (e) {
+    if ((e as { code?: string }).code === "resource_missing") {
+      throw new ErrorHttp(404, "Método de pago no encontrado");
+    }
+    throw e;
+  }
+
+  const dueno = typeof metodo.customer === "string" ? metodo.customer : metodo.customer?.id;
+  if (dueno !== customerId) throw new ErrorHttp(403, "El método de pago no pertenece al usuario");
+  return idMetodo;
+}
+
+/** Id de la tarjeta predeterminada del cliente en Stripe, o null. */
+async function obtenerPredeterminada(customerId: string): Promise<string | null> {
+  const cliente = await stripe.customers.retrieve(customerId);
+  if (cliente.deleted) return null;
+  const pm = cliente.invoice_settings?.default_payment_method;
+  if (!pm) return null;
+  return typeof pm === "string" ? pm : pm.id;
+}
+
+async function guardarPredeterminada(customerId: string, idMetodo: string): Promise<void> {
+  await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: idMetodo } });
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
 
@@ -106,12 +143,21 @@ Deno.serve(async (req) => {
     switch (accion) {
       case "listar": {
         const lista = await stripe.paymentMethods.list({ customer: customerId, type: "card", limit: 100 });
+
+        // La predeterminada debe ser una de sus tarjetas; si no hay, se marca la más reciente
+        let predeterminada = await obtenerPredeterminada(customerId);
+        if (lista.data.length > 0 && !lista.data.some((m) => m.id === predeterminada)) {
+          predeterminada = lista.data[0].id;
+          await guardarPredeterminada(customerId, predeterminada);
+        }
+
         const metodos = lista.data.map((m) => ({
           id: m.id,
           marca: m.card?.brand ?? "",
           ultimos4: m.card?.last4 ?? "",
           mes_exp: m.card?.exp_month ?? 0,
           anio_exp: m.card?.exp_year ?? 0,
+          predeterminada: m.id === predeterminada,
         }));
         return json({ metodos });
       }
@@ -133,26 +179,15 @@ Deno.serve(async (req) => {
       }
 
       case "eliminar": {
-        const idMetodo = body.id_metodo;
-        if (typeof idMetodo !== "string" || !idMetodo.startsWith("pm_")) {
-          return json({ error: "id_metodo inválido" }, 400);
-        }
-
-        let metodo: Stripe.PaymentMethod;
-        try {
-          metodo = await stripe.paymentMethods.retrieve(idMetodo);
-        } catch (e) {
-          if ((e as { code?: string }).code === "resource_missing") {
-            return json({ error: "Método de pago no encontrado" }, 404);
-          }
-          throw e;
-        }
-
-        const dueno = typeof metodo.customer === "string" ? metodo.customer : metodo.customer?.id;
-        if (dueno !== customerId) return json({ error: "El método de pago no pertenece al usuario" }, 403);
-
+        const idMetodo = await verificarDueno(body.id_metodo, customerId);
         await stripe.paymentMethods.detach(idMetodo);
         return json({ eliminado: true });
+      }
+
+      case "predeterminar": {
+        const idMetodo = await verificarDueno(body.id_metodo, customerId);
+        await guardarPredeterminada(customerId, idMetodo);
+        return json({ predeterminada: idMetodo });
       }
     }
   } catch (e) {

@@ -19,9 +19,12 @@ const COMISION: Record<TipoPago, number> = {
   extension: 0.05, // 5 %
 };
 
-// Cupones válidos (solo aplican a reservas)
-const CUPONES: Record<string, number> = {
-  PROMO10: 0.10,
+// Cupones válidos (solo aplican a reservas). La descripción se muestra en la app al escribir el código.
+const CUPONES: Record<string, { porcentaje: number; descripcion: string }> = {
+  PROMO10: {
+    porcentaje: 0.10,
+    descripcion: "10 % de descuento en el precio del estacionamiento. Solo aplica a reservas, no a extensiones.",
+  },
 };
 
 interface Desglose {
@@ -32,6 +35,7 @@ interface Desglose {
   comision: number;
   porcentaje_comision: number;
   cupon: string | null;
+  cupon_descripcion: string | null;
   descuento: number;
   total: number;
   total_centavos: number;
@@ -48,8 +52,9 @@ function calcularDesglose(
   if (!Number.isInteger(horas) || horas < 1) throw new Error("Horas inválidas");
 
   const codigo = cupon?.trim().toUpperCase() || null;
-  const pctCupon = tipo === "reserva" && codigo ? CUPONES[codigo] : undefined;
-  if (codigo && pctCupon === undefined) throw new Error("Cupón inválido");
+  const datosCupon = tipo === "reserva" && codigo ? CUPONES[codigo] : undefined;
+  if (codigo && datosCupon === undefined) throw new Error("Cupón inválido");
+  const pctCupon = datosCupon?.porcentaje;
 
   const subtotal = redondear(horas * precioHora);
   const comision = redondear(subtotal * COMISION[tipo]);
@@ -64,6 +69,7 @@ function calcularDesglose(
     comision,
     porcentaje_comision: COMISION[tipo],
     cupon: pctCupon ? codigo : null,
+    cupon_descripcion: datosCupon?.descripcion ?? null,
     descuento,
     total,
     total_centavos: Math.round(total * 100),
