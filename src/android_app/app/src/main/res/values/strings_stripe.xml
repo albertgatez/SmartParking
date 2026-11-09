@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Textos del formulario de tarjeta de Stripe (CardMultilineWidget, pantalla Agregar tarjeta).
+    Sobrescriben los del SDK para que siempre salgan en español de México, aunque el teléfono
+    esté en otro idioma. La copia en values-es/ es necesaria porque el SDK trae su propia
+    traducción al español ("Código ZIP", "caducidad").
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PrivateResource">
+    <string name="acc_label_card_number">Número de tarjeta</string>
+    <string name="acc_label_expiry_date">Fecha de vencimiento</string>
+    <string name="expiry_label_short">Vencimiento</string>
+    <string name="acc_label_zip">Código postal</string>
+    <string name="acc_label_zip_short">C.P.</string>
+    <string name="invalid_card_number">El número de tarjeta no es válido.</string>
+    <string name="invalid_cvc">El código de seguridad no es válido.</string>
+    <string name="invalid_expiry_month">El mes de vencimiento no es válido.</string>
+    <string name="invalid_expiry_year">El año de vencimiento no es válido.</string>
+    <string name="incomplete_expiry_date">La fecha de vencimiento está incompleta.</string>
+    <string name="invalid_zip">El código postal debe tener 5 dígitos.</string>
+</resources>

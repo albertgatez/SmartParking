@@ -75,7 +75,8 @@ public class MetodosPagoApiClient {
                             m.optString("marca", ""),
                             m.optString("ultimos4", ""),
                             m.optInt("mes_exp", 0),
-                            m.optInt("anio_exp", 0)));
+                            m.optInt("anio_exp", 0),
+                            m.optBoolean("predeterminada", false)));
                 }
                 mainHandler.post(() -> callback.onSuccess(metodos));
             }
@@ -112,6 +113,21 @@ public class MetodosPagoApiClient {
                 String customerId = json.getString("customerId");
                 String ephemeralKey = json.getString("ephemeralKey");
                 mainHandler.post(() -> callback.onSuccess(customerId, ephemeralKey));
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    /** Marca la tarjeta como predeterminada (se guarda en Stripe). */
+    public static void predeterminar(String idMetodo, EliminarCallback callback) {
+        enviar("predeterminar", idMetodo, new RespuestaCallback() {
+            @Override
+            public void onSuccess(JSONObject json) {
+                mainHandler.post(callback::onSuccess);
             }
 
             @Override

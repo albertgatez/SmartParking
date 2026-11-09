@@ -1,17 +1,26 @@
 package com.smartparking.ui.shoppingcart;
 
-import com.stripe.android.paymentsheet.PaymentSheet;
+import com.stripe.android.PaymentConfiguration;
+import com.stripe.android.model.ConfirmPaymentIntentParams;
+import com.stripe.android.payments.paymentlauncher.PaymentLauncher;
+import com.stripe.android.payments.paymentlauncher.PaymentResult;
 import com.stripe.android.paymentsheet.PaymentSheetResult;
 import com.smartparking.utils.DateTimeUtils;
 import com.smartparking.pagos.DesglosePago;
 import com.smartparking.pagos.MetodoPago;
 import com.smartparking.pagos.MetodosPagoActivity;
 import com.smartparking.pagos.MetodosPagoApiClient;
+import com.smartparking.pagos.PreferenciasPago;
 import com.smartparking.pagos.ReservaApiClient;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +30,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -41,9 +52,20 @@ import java.util.Locale;
 public class ShoppingCartFragment extends Fragment {
 
     private static final String TAG = "ShoppingCartFragment";
-    private PaymentSheet paymentSheet;
+    private PaymentLauncher paymentLauncher;
     private String clientSecret;
-    private String customerIdPago; // Cliente de Stripe del PaymentIntent
+
+    // Método de pago: la tarjeta guardada con la que se va a pagar (null = no tiene o no cargó)
+    private MetodoPago metodoSeleccionado = null;
+    private ActivityResultLauncher<Intent> seleccionTarjetaLauncher;
+
+    // Promociones: búsqueda del cupón mientras se escribe (con espera para no llamar en cada tecla)
+    private static final long ESPERA_BUSQUEDA_CUPON_MS = 600;
+    private final Handler handlerCupon = new Handler(Looper.getMainLooper());
+    private Runnable busquedaCuponPendiente;
+    private DesglosePago sugerenciaCupon; // desglose del cupón sugerido (válido)
+    private View layoutSugerenciaCupon;
+    private TextView tvSugerenciaCodigo, tvSugerenciaDescripcion, tvCuponInvalido;
 
     // Vistas
     private LinearLayout layoutReservaActiva, layoutSinReserva;
@@ -79,8 +101,10 @@ public class ShoppingCartFragment extends Fragment {
 
         initViews(view);
 
-        // 2. Inicializa el paymentsheet
-        paymentSheet = new PaymentSheet(this, this::onPaymentSheetResult);
+        // 2. Launcher de Stripe para pagar con la tarjeta guardada elegida
+        PaymentConfiguration stripeConfig = PaymentConfiguration.getInstance(requireContext());
+        paymentLauncher = PaymentLauncher.Companion.create(this,
+                stripeConfig.getPublishableKey(), stripeConfig.getStripeAccountId(), this::onPaymentResult);
 
         // Obtiene el Repository compartido de la Activity
         reservaRepo = ReservaRepository.getInstance(requireContext());
@@ -104,11 +128,34 @@ public class ShoppingCartFragment extends Fragment {
 
         // Configuracion de botones
         btnConfirmarPago.setOnClickListener(v -> confirmarPago());
-        btnAplicarCupon.setOnClickListener(v -> aplicarCupon());
+        // "Aplicar" valida el cupón escrito; "Quitar" lo quita
+        btnAplicarCupon.setOnClickListener(v -> {
+            if (cuponAplicado != null) quitarCupon(); else aplicarCupon();
+        });
 
-        // La fila de pago abre Perfil > Métodos de pago; al volver, onResume recarga la tarjeta
-        view.findViewById(R.id.filaMetodoPago).setOnClickListener(v ->
-                startActivity(new Intent(requireContext(), MetodosPagoActivity.class)));
+        // La fila de pago abre Métodos de pago para elegir la tarjeta o agregar otra
+        view.findViewById(R.id.filaMetodoPago).setOnClickListener(v -> abrirSelectorTarjeta(null));
+
+        // Promociones: al escribir, se busca el cupón en el servidor y se sugiere si es válido
+        configurarBusquedaCupon(view);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Debe registrarse antes de que el fragment se cree
+        seleccionTarjetaLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        String id = result.getData().getStringExtra(MetodosPagoActivity.EXTRA_ID_METODO);
+                        // Se guarda para que no se pierda al cambiar de pestaña
+                        if (reservaActual != null) {
+                            PreferenciasPago.setTarjeta(requireContext(), reservaActual.getId(), id);
+                        }
+                    }
+                    // onResume recarga la fila PAGO con la tarjeta elegida
+                });
     }
 
     private void initViews(View view) {
@@ -128,6 +175,10 @@ public class ShoppingCartFragment extends Fragment {
         btnConfirmarPago = view.findViewById(R.id.btnConfirmarPago);
         btnAplicarCupon = view.findViewById(R.id.btnAplicarCupon);
         etCupon = view.findViewById(R.id.etCupon);
+        layoutSugerenciaCupon = view.findViewById(R.id.layoutSugerenciaCupon);
+        tvSugerenciaCodigo = view.findViewById(R.id.tvSugerenciaCodigo);
+        tvSugerenciaDescripcion = view.findViewById(R.id.tvSugerenciaDescripcion);
+        tvCuponInvalido = view.findViewById(R.id.tvCuponInvalido);
     }
 
     /**
@@ -170,8 +221,8 @@ public class ShoppingCartFragment extends Fragment {
     }
 
     /**
-     * Muestra la tarjeta que el usuario tiene guardada en Stripe (la más reciente)
-     * o avisa que no tiene ninguna. Al pagar, la tarjeta se elige en el PaymentSheet.
+     * Carga las tarjetas guardadas en Stripe y selecciona la que eligió el usuario en
+     * Métodos de pago (si sigue existiendo) o, si no eligió, la predeterminada.
      */
     private void cargarMetodoPago() {
         tvMetodoPago.setText("Cargando...");
@@ -180,32 +231,34 @@ public class ShoppingCartFragment extends Fragment {
             @Override
             public void onSuccess(List<MetodoPago> metodos) {
                 if (!isAdded()) return;
-                if (metodos.isEmpty()) {
-                    tvMetodoPago.setText("Sin método de pago guardado");
-                    return;
-                }
-                MetodoPago tarjeta = metodos.get(0);
-                String texto = tarjeta.getMarcaVisible() + " •••• " + tarjeta.getUltimos4()
-                        + "  (vence " + tarjeta.getVencimiento() + ")";
-                if (metodos.size() > 1) {
-                    texto += "\n+" + (metodos.size() - 1) + " tarjeta(s) más";
-                }
-                tvMetodoPago.setText(texto);
+                // La tarjeta elegida para esta reserva (guardada en el teléfono), si sigue existiendo
+                String idElegida = reservaActual != null
+                        ? PreferenciasPago.getTarjeta(requireContext(), reservaActual.getId()) : null;
+                MetodoPago elegida = MetodoPago.buscarPorId(metodos, idElegida);
+                metodoSeleccionado = elegida != null ? elegida : MetodoPago.buscarPredeterminada(metodos);
+                tvMetodoPago.setText(MetodoPago.textoFilaPago(metodoSeleccionado));
             }
 
             @Override
             public void onError(String error) {
                 if (!isAdded()) return;
                 Log.w(TAG, "No se pudo cargar el método de pago: " + error);
-                tvMetodoPago.setText("No se pudo cargar el método de pago");
+                metodoSeleccionado = null;
+                tvMetodoPago.setText("No se pudo cargar el método de pago\nToca para reintentar");
             }
         });
+    }
+
+    /** Abre Métodos de pago en modo selección: ver tarjetas, elegir con cuál pagar o agregar otra. */
+    private void abrirSelectorTarjeta(@Nullable String mensaje) {
+        String idActual = metodoSeleccionado != null ? metodoSeleccionado.getId() : null;
+        seleccionTarjetaLauncher.launch(MetodosPagoActivity.intentSeleccion(requireContext(), idActual, mensaje));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Por si el usuario agregó o eliminó tarjetas en Perfil > Métodos de pago
+        // Al volver de Métodos de pago (eligió, agregó o eliminó tarjetas) se recarga la fila PAGO
         if (layoutReservaActiva != null && layoutReservaActiva.getVisibility() == View.VISIBLE) {
             cargarMetodoPago();
         }
@@ -239,14 +292,15 @@ public class ShoppingCartFragment extends Fragment {
         tvPrecioPorHora.setText("Lugar: " + reservaActual.getSeccion() + reservaActual.getNumeroCajon());
         tvTipoCajon.setText(reservaActual.isDiscapacitado() ? "Discapacitado" : "Estándar");
 
-        // Si es otra reserva, el cupón anterior ya no aplica
+        // Al mostrar otra reserva (o al volver a esta pestaña) se recupera el cupón guardado
+        // para esta reserva; si es otra reserva, PreferenciasPago descarta el anterior
         if (reservaActual.getId() != idReservaCupon) {
-            cuponAplicado = null;
             idReservaCupon = reservaActual.getId();
-            etCupon.setText("");
-            etCupon.setEnabled(true);
-            btnAplicarCupon.setEnabled(true);
-            tvCuponAplicado.setVisibility(View.GONE);
+            cancelarBusquedaCupon();
+            sugerenciaCupon = null;
+            layoutSugerenciaCupon.setVisibility(View.GONE);
+            tvCuponInvalido.setVisibility(View.GONE);
+            mostrarEstadoCupon(PreferenciasPago.getCupon(requireContext(), idReservaCupon));
         }
 
         // Precios calculados por el servidor
@@ -295,6 +349,7 @@ public class ShoppingCartFragment extends Fragment {
 
         // Elimina la reserva del ViewModel (esto también la elimina de la BD)
         reservaRepo.limpiarReserva(true);
+        PreferenciasPago.limpiar(requireContext());
 
         detenerTemporizador();
         mostrarSinReserva();
@@ -365,6 +420,12 @@ public class ShoppingCartFragment extends Fragment {
                     @Override
                     public void onError(String error) {
                         if (!isAdded() || reservaActual == null || reservaActual.getId() != idReserva) return;
+                        // Si el cupón guardado ya no es válido, se quita y se vuelve a calcular sin él
+                        if (cuponAplicado != null && error.toLowerCase(Locale.ROOT).contains("cup")) {
+                            Toast.makeText(requireContext(), "El cupón " + cuponAplicado + " ya no es válido", Toast.LENGTH_LONG).show();
+                            quitarCupon();
+                            return;
+                        }
                         Log.e(TAG, "No se pudo calcular el precio: " + error);
                         tvSubtotal.setText("—");
                         tvComision.setText("—");
@@ -411,11 +472,8 @@ public class ShoppingCartFragment extends Fragment {
                     @Override
                     public void onSuccess(DesglosePago desglose) {
                         if (!isAdded() || reservaActual == null || reservaActual.getId() != idReserva) return;
-                        cuponAplicado = desglose.getCupon();
-                        mostrarPrecios(desglose);
-                        if (cuponAplicado != null) {
-                            Toast.makeText(requireContext(), "Cupón aplicado correctamente", Toast.LENGTH_SHORT).show();
-                            etCupon.setEnabled(false);
+                        if (desglose.getCupon() != null) {
+                            aplicarDesgloseConCupon(desglose);
                         } else {
                             Toast.makeText(requireContext(), "Cupón inválido", Toast.LENGTH_SHORT).show();
                             btnAplicarCupon.setEnabled(true);
@@ -431,6 +489,123 @@ public class ShoppingCartFragment extends Fragment {
                 });
     }
 
+    /** Deja aplicado el cupón del desglose (ya validado por el servidor) y lo guarda. */
+    private void aplicarDesgloseConCupon(DesglosePago desglose) {
+        cancelarBusquedaCupon();
+        layoutSugerenciaCupon.setVisibility(View.GONE);
+        tvCuponInvalido.setVisibility(View.GONE);
+        mostrarEstadoCupon(desglose.getCupon());
+        mostrarPrecios(desglose);
+        if (reservaActual != null) {
+            PreferenciasPago.setCupon(requireContext(), reservaActual.getId(), cuponAplicado);
+        }
+        Toast.makeText(requireContext(), "Cupón aplicado correctamente", Toast.LENGTH_SHORT).show();
+    }
+
+    /** Quita el cupón aplicado, lo borra de lo guardado y recalcula el precio sin descuento. */
+    private void quitarCupon() {
+        if (reservaActual != null) {
+            PreferenciasPago.setCupon(requireContext(), reservaActual.getId(), null);
+        }
+        mostrarEstadoCupon(null);
+        tvCuponAplicado.setVisibility(View.GONE);
+        cargarPrecios();
+    }
+
+    /**
+     * Ajusta el campo y el botón según haya o no cupón:
+     * con cupón, el campo queda bloqueado con el código y el botón dice "Quitar";
+     * sin cupón, el campo queda vacío y el botón dice "Aplicar".
+     */
+    private void mostrarEstadoCupon(@Nullable String cupon) {
+        cuponAplicado = cupon;
+        // Se cambia "enabled" antes que el texto para que el cambio no dispare una búsqueda
+        if (cupon != null) {
+            etCupon.setEnabled(false);
+            etCupon.setText(cupon);
+            btnAplicarCupon.setText("Quitar");
+        } else {
+            etCupon.setEnabled(false);
+            etCupon.setText("");
+            etCupon.setEnabled(true);
+            btnAplicarCupon.setText("Aplicar");
+        }
+        btnAplicarCupon.setEnabled(true);
+    }
+
+    // ---------- Promociones: sugerencia mientras se escribe ----------
+
+    private void configurarBusquedaCupon(View view) {
+        // Al tocar la sugerencia se aplica la promoción
+        layoutSugerenciaCupon.setOnClickListener(v -> {
+            if (sugerenciaCupon != null) aplicarDesgloseConCupon(sugerenciaCupon);
+        });
+
+        etCupon.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!etCupon.isEnabled()) return; // ya hay un cupón aplicado
+                cancelarBusquedaCupon();
+                sugerenciaCupon = null;
+                layoutSugerenciaCupon.setVisibility(View.GONE);
+                tvCuponInvalido.setVisibility(View.GONE);
+
+                String codigo = s.toString().trim().toUpperCase(Locale.ROOT);
+                if (codigo.length() < 3) return; // los códigos tienen al menos 3 caracteres
+
+                busquedaCuponPendiente = () -> buscarCupon(codigo);
+                handlerCupon.postDelayed(busquedaCuponPendiente, ESPERA_BUSQUEDA_CUPON_MS);
+            }
+        });
+    }
+
+    private void cancelarBusquedaCupon() {
+        if (busquedaCuponPendiente != null) {
+            handlerCupon.removeCallbacks(busquedaCuponPendiente);
+            busquedaCuponPendiente = null;
+        }
+    }
+
+    /** Pregunta al servidor si el código es válido; si lo es, muestra la sugerencia. */
+    private void buscarCupon(String codigo) {
+        if (reservaActual == null) return;
+        final long idReserva = reservaActual.getId();
+
+        ReservaApiClient.cotizar(idReserva, ReservaApiClient.TIPO_RESERVA, 0, codigo,
+                new ReservaApiClient.CotizacionCallback() {
+                    @Override
+                    public void onSuccess(DesglosePago desglose) {
+                        if (!esBusquedaVigente(idReserva, codigo)) return;
+                        if (desglose.getCupon() == null) {
+                            tvCuponInvalido.setVisibility(View.VISIBLE);
+                            return;
+                        }
+                        sugerenciaCupon = desglose;
+                        tvSugerenciaCodigo.setText(String.format(Locale.getDefault(),
+                                "%s  ·  -$%.2f", desglose.getCupon(), desglose.getDescuento()));
+                        tvSugerenciaDescripcion.setText(desglose.getCuponDescripcion());
+                        layoutSugerenciaCupon.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (!esBusquedaVigente(idReserva, codigo)) return;
+                        // "Cupón inválido" u otro error: se avisa debajo del campo
+                        tvCuponInvalido.setVisibility(View.VISIBLE);
+                    }
+                });
+    }
+
+    /** La respuesta sirve solo si sigue la misma reserva y el mismo texto en el campo. */
+    private boolean esBusquedaVigente(long idReserva, String codigo) {
+        return isAdded() && reservaActual != null && reservaActual.getId() == idReserva
+                && etCupon.isEnabled()
+                && codigo.equals(etCupon.getText().toString().trim().toUpperCase(Locale.ROOT));
+    }
+
     /**
      * Inicia el proceso de pago llamando al backend para obtener el Client Secret de Stripe.
      * El monto lo calcula el servidor; la app solo manda la reserva y el cupón.
@@ -438,6 +613,14 @@ public class ShoppingCartFragment extends Fragment {
     private void confirmarPago() {
         if (reservaActual == null) {
             Toast.makeText(requireContext(), "Error: No hay reserva para pagar.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Se paga con una tarjeta guardada; si no hay, se abre Métodos de pago para elegir o agregar
+        final MetodoPago tarjeta = metodoSeleccionado;
+        if (tarjeta == null) {
+            Toast.makeText(requireContext(), "Elige o agrega una tarjeta para pagar", Toast.LENGTH_SHORT).show();
+            abrirSelectorTarjeta("Agrega o elige la tarjeta con la que vas a pagar tu reserva.");
             return;
         }
 
@@ -457,9 +640,8 @@ public class ShoppingCartFragment extends Fragment {
                     public void onSuccess(String secret, String customer, DesglosePago desglose) {
                         if (!isAdded()) return;
                         clientSecret = secret;
-                        customerIdPago = customer;
                         mostrarPrecios(desglose); // Lo que se va a cobrar
-                        presentPaymentSheet(); // 2. Mostrar la interfaz de Stripe
+                        cobrar(tarjeta); // 2. Cobrar con la tarjeta elegida
                     }
 
                     @Override
@@ -475,39 +657,24 @@ public class ShoppingCartFragment extends Fragment {
     }
 
     /**
-     * Muestra la interfaz de PaymentSheet de Stripe. Antes pide la llave del cliente para
-     * mostrar sus tarjetas guardadas; si falla, se paga como siempre (sin tarjetas guardadas).
+     * Confirma el pago con la tarjeta guardada elegida (Stripe pide 3D Secure si la tarjeta
+     * lo necesita). confirmarPago() ya verificó que hay una tarjeta elegida.
      */
-    private void presentPaymentSheet() {
-        MetodosPagoApiClient.obtenerLlaveCliente(new MetodosPagoApiClient.LlaveClienteCallback() {
-            @Override
-            public void onSuccess(String customerId, String ephemeralKey) {
-                if (!isAdded()) return;
-                // Las tarjetas guardadas solo sirven si el pago es del mismo cliente de Stripe
-                if (customerId.equals(customerIdPago)) {
-                    mostrarPaymentSheet(new PaymentSheet.CustomerConfiguration(customerId, ephemeralKey));
-                } else {
-                    Log.w(TAG, "El pago no es del mismo cliente de Stripe; se omiten las tarjetas guardadas");
-                    mostrarPaymentSheet(null);
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                if (!isAdded()) return;
-                Log.w(TAG, "Sin tarjetas guardadas: " + error);
-                mostrarPaymentSheet(null);
-            }
-        });
+    private void cobrar(MetodoPago tarjeta) {
+        Log.d(TAG, "Pagando con la tarjeta guardada " + tarjeta.getId());
+        paymentLauncher.confirm(ConfirmPaymentIntentParams.createWithPaymentMethodId(
+                tarjeta.getId(), clientSecret));
     }
 
-    private void mostrarPaymentSheet(PaymentSheet.CustomerConfiguration cliente) {
-        PaymentSheet.Configuration.Builder builder =
-                new PaymentSheet.Configuration.Builder("Smart Parking")
-                        .allowsDelayedPaymentMethods(false);
-        if (cliente != null) builder.customer(cliente);
-
-        paymentSheet.presentWithPaymentIntent(clientSecret, builder.build());
+    /** Resultado del pago; se convierte a PaymentSheetResult para reutilizar el mismo manejo. */
+    private void onPaymentResult(PaymentResult result) {
+        if (result instanceof PaymentResult.Completed) {
+            onPaymentSheetResult(PaymentSheetResult.Completed.INSTANCE);
+        } else if (result instanceof PaymentResult.Canceled) {
+            onPaymentSheetResult(PaymentSheetResult.Canceled.INSTANCE);
+        } else if (result instanceof PaymentResult.Failed) {
+            onPaymentSheetResult(new PaymentSheetResult.Failed(((PaymentResult.Failed) result).getThrowable()));
+        }
     }
 
     /**
@@ -519,6 +686,9 @@ public class ShoppingCartFragment extends Fragment {
 
         if (result instanceof PaymentSheetResult.Completed) {
             Toast.makeText(requireContext(), "¡Pago realizado!", Toast.LENGTH_LONG).show();
+
+            // Ya se pagó: se borran el cupón y la tarjeta guardados para esta reserva
+            PreferenciasPago.limpiar(requireContext());
 
             // Confirmar la reserva en BD y limpiar la reserva local
             reservaRepo.confirmarReservaActual();
@@ -541,5 +711,6 @@ public class ShoppingCartFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         detenerTemporizador();
+        cancelarBusquedaCupon();
     }
 }

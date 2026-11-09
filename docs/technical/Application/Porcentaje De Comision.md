@@ -33,6 +33,16 @@ Reglas:
 - La comisión se calcula sobre el **subtotal sin descuento**: el cupón descuenta el precio del estacionamiento, no el servicio de SmartParking.
 - Los cupones solo aplican a reservas, no a extensiones.
 - Cupón vigente: `PROMO10`, 10 % de descuento.
+- Los cupones están en `CUPONES` dentro de `crear-pago-reserva-v2/index.ts`, cada uno con su porcentaje y una descripción breve. Para agregar uno se añade ahí y se vuelve a desplegar la función.
+
+### Cupones en el Carrito
+
+- Mientras el usuario escribe el código (desde 3 caracteres, con 0.6 s de espera para no consultar en cada tecla), la app pide el desglose con `solo_cotizar` y ese `cupon`.
+- **Si es válido**, aparece debajo del campo una tarjeta con el código, el descuento en pesos y la descripción (`desglose.cupon_descripcion`), y el texto "Toca para aplicar". Al tocarla, el cupón se aplica y el desglose se actualiza.
+- **Si no es válido**, aparece "Cupón no válido" debajo del campo.
+- El botón **Aplicar** sigue funcionando igual. Con un cupón aplicado, el campo queda bloqueado y el botón cambia a **Quitar**, que quita el cupón y recalcula el precio sin descuento.
+- El cupón aplicado se guarda en el teléfono (`pagos/PreferenciasPago`, junto con el id de la reserva), así que se conserva al cambiar de pestaña o cerrar la app. Se borra al pagar, cuando la reserva expira o al hacer otra reserva. Si al volver el servidor dice que ya no es válido, se quita y se avisa.
+- Si el servidor todavía no manda `cupon_descripcion` (versión anterior de la función), la app muestra el porcentaje calculado, por ejemplo "10 % de descuento en el precio del estacionamiento."
 
 ## 4. Ejemplos
 

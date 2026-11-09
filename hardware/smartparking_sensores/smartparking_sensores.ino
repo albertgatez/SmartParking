@@ -34,6 +34,10 @@ const int HISTERESIS_CM = 3;  // Para volver a LIBRE debe alejarse a más
 const int DISTANCIA_MINIMA_CM = 2;  // Lecturas menores son ruido del sensor y se ignoran
 const int DISTANCIA_MAXIMA_CM = 100; // Mas alla de esto (o sin eco) se considera que no hay nada
 const byte LECTURAS_CONFIRMACION = 3; // Lecturas iguales seguidas para cambiar de estado
+// Filtro de tiempo: el objeto debe permanecer este tiempo para contar como auto.
+// Asi una persona que pasa frente al sensor no marca el cajon como ocupado.
+const unsigned long TIEMPO_PARA_OCUPAR_MS  = 3000; // Presencia continua para pasar a OCUPADO
+const unsigned long TIEMPO_PARA_LIBERAR_MS = 1500; // Ausencia continua para volver a LIBRE
 const unsigned long PAUSA_ENTRE_SENSORES_MS = 40; // Evita que el eco de un sensor llegue a otro
 const unsigned long PERIODO_PARPADEO_MS = 250;  // Velocidad del parpadeo rojo
 const unsigned long TIMEOUT_COMANDO_MS = 200; // Descarta un comando incompleto
@@ -50,6 +54,7 @@ byte estado[NUM_CAJONES]              = {LIBRE, LIBRE, LIBRE};
 bool reservaActiva[NUM_CAJONES]       = {false, false, false};
 bool presenciaConfirmada[NUM_CAJONES] = {false, false, false};
 byte contadorCambio[NUM_CAJONES]      = {0, 0, 0};
+unsigned long inicioCambio[NUM_CAJONES] = {0, 0, 0};  // Desde cuando se lee el estado contrario
 bool llegadaConfirmada[NUM_CAJONES]   = {false, false, false};  // el que reservo ya escaneo su QR
 
 byte sensorActual = 0;
@@ -135,11 +140,17 @@ void procesarLectura(byte i, int distancia) {
   bool hayObjeto = (distancia > 0 && distancia < limite);
 
   if (hayObjeto == presenciaConfirmada[i]) {
-    contadorCambio[i] = 0;
+    contadorCambio[i] = 0;   // Una lectura igual al estado actual reinicia el filtro
     return;
   }
 
-  if (++contadorCambio[i] < LECTURAS_CONFIRMACION) return;
+  if (contadorCambio[i] == 0) inicioCambio[i] = millis();  // Empieza a contar el tiempo
+  if (contadorCambio[i] < 255) contadorCambio[i]++;
+
+  // Se necesitan las lecturas seguidas y que el cambio dure el tiempo minimo
+  unsigned long tiempoMinimo = hayObjeto ? TIEMPO_PARA_OCUPAR_MS : TIEMPO_PARA_LIBERAR_MS;
+  if (contadorCambio[i] < LECTURAS_CONFIRMACION) return;
+  if (millis() - inicioCambio[i] < tiempoMinimo) return;
 
   // Cambio confirmado
   presenciaConfirmada[i] = hayObjeto;

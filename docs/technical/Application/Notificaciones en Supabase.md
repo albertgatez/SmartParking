@@ -402,6 +402,15 @@ SELECT status, return_message, start_time FROM cron.job_run_details ORDER BY sta
 | Mensajes solo de datos | Un único camino de presentación en la app, con y sin la app abierta |
 | El secreto está guardado en la definición del trigger | Aceptable en este proyecto; en producción conviene moverlo a Vault |
 
+## 13. Quitar avisos de la pestaña Avisos
+
+En la pestaña **Avisos**, cada aviso tiene una **X** y también se puede **deslizar a la derecha**. Al quitarlo aparece "Aviso eliminado" con la opción **Deshacer** durante unos segundos.
+
+- **No se borra de la BD**, solo se marca `oculta = true` (migración `20261109_notificaciones_ocultar.sql`). La lista pide `oculta=eq.false`. Si se borrara, `notificar_reservas_por_terminar()` (que revisa con `NOT EXISTS` si el recordatorio ya existe) y el trigger del sensor del cajón (que evita repetir el aviso en 1 minuto) lo volverían a crear y a enviar como push.
+- **Permisos:** la app solo puede modificar la columna `oculta` (`GRANT UPDATE (oculta)`), y solo en avisos propios (política `notificacion_ocultar_propias`). Las Edge Functions usan la service role, así que siguen pudiendo marcar `push_enviada`.
+- **App:** `NotificacionesApiClient.cambiarOculta()` hace `PATCH /rest/v1/Notificacion?id=eq.<id>` con `Prefer: return=representation`. Si la respuesta es `[]` (RLS no dejó modificarla), se avisa al usuario y el aviso vuelve a la lista.
+- **Antes de aplicar la migración:** si la columna `oculta` no existe, la lista se carga igual (sin el filtro), y al quitar un aviso aparece "No se pudo quitar el aviso".
+
 ## Pendiente
 
 - **Bienvenida en Avisos:** `notificar-bienvenida` no inserta en `Notificacion`. Puede insertar la fila y dejar que el webhook mande el push, y así se evita el código de FCM duplicado en las dos funciones.

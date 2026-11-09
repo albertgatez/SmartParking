@@ -183,17 +183,72 @@
                             android:background="@null"
                             android:padding="8dp" />
 
+                        <!-- Mismo azul que los demás botones de la app -->
                         <Button
                             android:id="@+id/btnAplicarCupon"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="wrap_content"
+                            android:minHeight="40dp"
+                            android:minWidth="88dp"
                             android:text="Aplicar"
                             android:textSize="12sp"
+                            android:textAllCaps="true"
                             android:backgroundTint="#00BCD4"
-                            android:textColor="#FFFFFF"
-                            style="?android:attr/borderlessButtonStyle" />
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
+
+                    <!-- Aparece al escribir un código válido; al tocarla se aplica -->
+                    <LinearLayout
+                        android:id="@+id/layoutSugerenciaCupon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="#E8F8F5"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tvSugerenciaCodigo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="PROMO10"
+                            android:textColor="#1E8449"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSugerenciaDescripcion"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text=""
+                            android:textColor="#333333"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Toca para aplicar"
+                            android:textColor="#0095FF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCuponInvalido"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Cupón no válido"
+                        android:textColor="#B03A2E"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/tvCuponAplicado"

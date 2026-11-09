@@ -21,6 +21,7 @@
         android:textColor="#2E2E2E" />
 
     <TextView
+        android:id="@+id/txtMetodosSubtitulo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Tus tarjetas se guardan de forma segura en Stripe."
@@ -95,6 +96,18 @@
             android:layout_gravity="center"
             android:visibility="gone" />
     </FrameLayout>
+
+    <!-- Solo en modo selección (desde el Carrito o la extensión) -->
+    <Button
+        android:id="@+id/btnUsarTarjeta"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#0095FF"
+        android:text="Pagar con esta tarjeta"
+        android:textAllCaps="true"
+        android:textColor="@android:color/white"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/btnAgregarTarjeta"

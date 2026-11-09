@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,11 +25,25 @@ import java.util.List;
 /** Lista de avisos de la pestaña Avisos. */
 public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdapter.AvisoViewHolder> {
 
+    public interface OnQuitarListener {
+        void onQuitar(Notificacion notificacion);
+    }
+
     private List<Notificacion> lista = new ArrayList<>();
+    private final OnQuitarListener listener;
+
+    public NotificationsAdapter(OnQuitarListener listener) {
+        this.listener = listener;
+    }
 
     public void actualizar(List<Notificacion> nueva) {
         this.lista = nueva != null ? nueva : new ArrayList<>();
         notifyDataSetChanged();
+    }
+
+    /** El aviso en esa posición (para deslizar a la derecha), o null. */
+    public Notificacion getItem(int position) {
+        return position >= 0 && position < lista.size() ? lista.get(position) : null;
     }
 
     @NonNull
@@ -49,6 +64,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
 
         ImageViewCompat.setImageTintList(holder.ivIcono,
                 ColorStateList.valueOf(colorPorTipo(holder.itemView.getContext(), n.getTipo())));
+
+        holder.btnQuitar.setOnClickListener(v -> listener.onQuitar(n));
     }
 
     @Override
@@ -75,9 +92,11 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
     static class AvisoViewHolder extends RecyclerView.ViewHolder {
         final ImageView ivIcono;
         final TextView tvTitulo, tvMensaje, tvFecha;
+        final ImageButton btnQuitar;
 
         AvisoViewHolder(@NonNull View itemView) {
             super(itemView);
+            btnQuitar = itemView.findViewById(R.id.btnQuitarAviso);
             ivIcono = itemView.findViewById(R.id.ivIconoAviso);
             tvTitulo = itemView.findViewById(R.id.tvTituloAviso);
             tvMensaje = itemView.findViewById(R.id.tvMensajeAviso);

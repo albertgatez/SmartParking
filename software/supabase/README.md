@@ -17,6 +17,7 @@ Esta carpeta está en `software/supabase/`. Si se usa la CLI de Supabase, los co
 | `20261105_notificaciones_token.sql` | Columnas `fcm_token` y `bienvenida_enviada` en `Usuario` | 11.1 | Aplicada |
 | `20261106_notificaciones_eventos.sql` | Tabla `Notificacion`, triggers en `Reserva` y `Cajon`, recordatorio con `pg_cron` | 11.2, 13.1 | Aplicada |
 | `20261106_notificaciones_envio.sql` | Trigger que envía cada aviso a la Edge Function `enviar-notificacion` | 11.2 | Aplicada |
+| `20261109_notificaciones_ocultar.sql` | Columna `oculta` en `Notificacion` y política para que cada usuario oculte sus avisos (X o deslizar en Avisos). No se borran para que los recordatorios no se reenvíen | 11.2 | Pendiente |
 | `20261106_rls_etapa1.sql` | RLS etapa 1: cada usuario solo modifica sus reservas; los cajones solo los modifica el gateway; vista `horarios_ocupados` | 8.2 | Aplicada el 06/11/2026 |
 | `20261106_rls_etapa2.sql` | RLS etapa 2: cada usuario solo ve sus reservas; la app ya no puede confirmar reservas | 8.2 | Pendiente |
 | `20261018_pagos_desglose.sql` | Llave primaria y desglose de pagos (subtotal, comisión, descuento) | 10.1, 12.2 | Aplicada (verificado el 07/11/2026: `Pagos` ya tiene `comision`, `descuento`, `tipo` y `stripe_payment_intent`) |
@@ -41,12 +42,12 @@ Cada migración se aplica **una sola vez**. Si se vuelve a ejecutar, marca error
 
 | Función | Qué hace | Estado |
 |---|---|---|
-| `crear-pago-reserva-v2` | Calcula el monto en el servidor (comisión de 4 % en reservas y 5 % en extensiones, cupones), valida la reserva y crea el pago en Stripe. Con `solo_cotizar: true` solo regresa el desglose. Incluye la fórmula en el mismo archivo para desplegarse desde el panel. La usa la app | Desplegada (con verificación de JWT) |
+| `crear-pago-reserva-v2` | Calcula el monto en el servidor (comisión de 4 % en reservas y 5 % en extensiones, cupones), valida la reserva y crea el pago en Stripe. Con `solo_cotizar: true` solo regresa el desglose. Incluye la fórmula en el mismo archivo para desplegarse desde el panel. La usa la app | Desplegada la versión 1 (con verificación de JWT). **Falta volver a desplegarla** para que mande `cupon_descripcion` (la descripción del cupón que ve el usuario) |
 | `stripe-webhook` | Recibe la confirmación de Stripe, confirma la reserva o extiende `tiempo_fin` y registra el pago con su desglose | Desplegada (versión de esta carpeta) |
 | `crear-pago-reserva` | Versión anterior: recibe el monto calculado por la app | Desplegada, ya no la usa la app nueva. Se puede eliminar cuando todos actualicen la app |
 | `notificar-bienvenida` | Envía el aviso de bienvenida al registrarse | Desplegada |
 | `enviar-notificacion` | Envía a Firebase cada aviso insertado en `Notificacion` | Desplegada |
-| `metodos-pago` | Lista, agrega (SetupIntent) y elimina las tarjetas guardadas del usuario en Stripe, y da la llave temporal para mostrarlas al pagar. Ver `docs/technical/Application/Metodos de pago.md` | Desplegada |
+| `metodos-pago` | Lista, agrega (SetupIntent) y elimina las tarjetas guardadas del usuario en Stripe, marca la predeterminada (`predeterminar`) y da la llave temporal para mostrarlas al pagar. Ver `docs/technical/Application/Metodos de pago.md` | Desplegada la versión 1. **Falta volver a desplegarla** con la acción `predeterminar` |
 
 ## Secretos
 

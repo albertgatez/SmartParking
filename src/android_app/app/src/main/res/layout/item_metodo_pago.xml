@@ -11,11 +11,23 @@
     app:cardUseCompatPadding="true">
 
     <LinearLayout
+        android:id="@+id/filaMetodo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
         android:padding="16dp">
+
+        <!-- Solo en modo selección: indica con qué tarjeta se va a pagar -->
+        <RadioButton
+            android:id="@+id/radioSeleccion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -23,15 +35,38 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Marca -->
-            <TextView
-                android:id="@+id/txtMarca"
+            <!-- Marca + etiqueta de predeterminada -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Visa"
-                android:textStyle="bold"
-                android:textSize="17sp"
-                android:textColor="#2E2E2E" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/txtMarca"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Visa"
+                    android:textStyle="bold"
+                    android:textSize="17sp"
+                    android:textColor="#2E2E2E" />
+
+                <TextView
+                    android:id="@+id/txtPredeterminada"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="#D5F5E3"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="Predeterminada"
+                    android:textColor="#1E8449"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
 
             <!-- Últimos 4 dígitos -->
             <TextView
@@ -52,6 +87,20 @@
                 android:text="Vence 12/28"
                 android:textSize="14sp"
                 android:textColor="#555555" />
+
+            <!-- Solo aparece en las tarjetas que no son la predeterminada -->
+            <TextView
+                android:id="@+id/btnPredeterminar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="?attr/selectableItemBackground"
+                android:minHeight="32dp"
+                android:gravity="center_vertical"
+                android:text="Usar como predeterminada"
+                android:textColor="#0095FF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <ImageButton
