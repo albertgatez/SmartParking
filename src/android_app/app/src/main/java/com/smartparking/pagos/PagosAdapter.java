@@ -12,13 +12,19 @@ import com.smartparking.R;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class PagosAdapter extends RecyclerView.Adapter<PagosAdapter.PagoViewHolder> {
 
-    private List<Pago> listaPagos;
+    private final List<Pago> listaPagos;
+    private final Map<String, String> nombresEstacionamiento;
 
-    public PagosAdapter(List<Pago> listaPagos) {
+    /**
+     * @param nombresEstacionamiento id del estacionamiento (como texto) -> nombre
+     */
+    public PagosAdapter(List<Pago> listaPagos, Map<String, String> nombresEstacionamiento) {
         this.listaPagos = listaPagos;
+        this.nombresEstacionamiento = nombresEstacionamiento;
     }
 
     @NonNull
@@ -33,9 +39,23 @@ public class PagosAdapter extends RecyclerView.Adapter<PagosAdapter.PagoViewHold
     public void onBindViewHolder(@NonNull PagoViewHolder holder, int position) {
         Pago pago = listaPagos.get(position);
 
-        holder.txtIdReserva.setText("Reserva: " + pago.getId_reserva());
-        holder.txtMonto.setText(String.format(Locale.getDefault(), "$%.2f", pago.getMonto_total()));
+        String nombre = nombresEstacionamiento.get(pago.getId_estacionamiento());
+        holder.txtEstacionamiento.setText(nombre != null ? nombre : "Estacionamiento " + pago.getId_estacionamiento());
+
+        holder.txtDetalle.setText(etiquetaTipo(pago.getTipo()) + " · Reserva #" + pago.getId_reserva());
         holder.txtFecha.setText(DateTimeUtils.formatearFechaHoraLocal(pago.getFecha_pago()));
+        holder.txtMonto.setText(formatear(pago.getMonto_total()));
+
+        if (pago.getSubtotal() > 0) {
+            holder.txtDesglose.setText(String.format(Locale.getDefault(),
+                    "Subtotal %s · Comisión %s · Descuento -%s",
+                    formatear(pago.getSubtotal()),
+                    formatear(pago.getComision()),
+                    formatear(pago.getDescuento())));
+            holder.txtDesglose.setVisibility(View.VISIBLE);
+        } else {
+            holder.txtDesglose.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -43,15 +63,26 @@ public class PagosAdapter extends RecyclerView.Adapter<PagosAdapter.PagoViewHold
         return listaPagos.size();
     }
 
+    private static String etiquetaTipo(String tipo) {
+        if ("extension".equals(tipo)) return "Extensión de tiempo";
+        if ("reserva".equals(tipo)) return "Reserva";
+        return "Pago";
+    }
+
+    private static String formatear(double monto) {
+        return String.format(Locale.getDefault(), "$%.2f", monto);
+    }
+
     public static class PagoViewHolder extends RecyclerView.ViewHolder {
-        TextView txtIdReserva, txtMonto, txtFecha;
+        TextView txtEstacionamiento, txtDetalle, txtFecha, txtMonto, txtDesglose;
 
         public PagoViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtIdReserva = itemView.findViewById(R.id.txtIdReserva);
-            txtMonto = itemView.findViewById(R.id.txtMonto);
+            txtEstacionamiento = itemView.findViewById(R.id.txtEstacionamiento);
+            txtDetalle = itemView.findViewById(R.id.txtDetalle);
             txtFecha = itemView.findViewById(R.id.txtFecha);
+            txtMonto = itemView.findViewById(R.id.txtMonto);
+            txtDesglose = itemView.findViewById(R.id.txtDesglose);
         }
     }
 }
-

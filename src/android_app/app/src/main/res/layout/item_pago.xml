@@ -16,18 +16,18 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Primera fila: ID + estado -->
+        <!-- Primera fila: estacionamiento + estado -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/txtIdReserva"
+                android:id="@+id/txtEstacionamiento"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Reserva #1234"
                 android:textStyle="bold"
                 android:textSize="17sp"
                 android:textColor="@color/app_text_primary" />
@@ -44,29 +44,49 @@
                 android:textColor="@color/app_success_text" />
         </LinearLayout>
 
-        <!-- Monto -->
+        <!-- Tipo de pago y reserva -->
         <TextView
-            android:id="@+id/txtMonto"
+            android:id="@+id/txtDetalle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="$150.00 MXN"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="6dp"
-            android:textColor="@color/app_accent_text" />
-
-        <!-- Fecha -->
-        <TextView
-            android:id="@+id/txtFecha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Fecha: 2024-01-01"
+            android:layout_marginTop="4dp"
             android:textSize="14sp"
-            android:layout_marginTop="6dp"
             android:textColor="@color/app_text_secondary" />
+
+        <!-- Fecha y monto total -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txtFecha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="14sp"
+                android:textColor="@color/app_text_secondary" />
+
+            <TextView
+                android:id="@+id/txtMonto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/app_accent_text" />
+        </LinearLayout>
+
+        <!-- Desglose: subtotal, comisión y descuento -->
+        <TextView
+            android:id="@+id/txtDesglose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textSize="12sp"
+            android:textColor="@color/app_text_hint" />
 
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
-
-
