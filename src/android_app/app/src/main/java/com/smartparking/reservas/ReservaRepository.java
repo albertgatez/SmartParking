@@ -193,29 +193,18 @@ public class ReservaRepository {
             return;
         }
 
-        Log.d(TAG, "Confirmando reserva: ID=" + reserva.getId());
+        Log.d(TAG, "Pago completado, reserva confirmada: ID=" + reserva.getId());
 
-        // Actualizar en la BD
-        supabaseClient.confirmarReserva(reserva.getId(), new SupabaseClient.SupabaseCallback() {
-            @Override
-            public void onSuccessUsuario() {
-                Log.d(TAG, "Reserva confirmada en BD exitosamente");
+        // En la BD la confirma stripe-webhook al recibir el pago (la app ya no puede
+        // cambiar "confirmada"). Aquí solo se actualiza la reserva guardada en el teléfono;
+        // sincronizarConServidor() la vuelve a leer de la BD al abrir la app.
+        reserva.setConfirmada(true);
+        reserva.setExpiracionMs(0); // Sin expiración para reservas confirmadas
 
-                // Actualizar en SharedPreferences
-                reserva.setConfirmada(true);
-                reserva.setExpiracionMs(0); // Sin expiración para reservas confirmadas
+        prefs.copiarReserva(reserva);
+        reservaLiveData.postValue(reserva);
 
-                prefs.copiarReserva(reserva);
-                reservaLiveData.postValue(reserva);
-
-                Log.d(TAG, "Reserva actualizada en SharedPreferences como confirmada");
-            }
-
-            @Override
-            public void onErrorUsuario(String message) {
-                Log.e(TAG, "Error al confirmar reserva en BD: " + message);
-            }
-        });
+        Log.d(TAG, "Reserva actualizada en SharedPreferences como confirmada");
     }
 
     /**

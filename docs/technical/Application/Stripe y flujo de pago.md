@@ -1,6 +1,6 @@
 # Configuración de Stripe y flujo de pago
 
-Los pagos usan **Stripe en modo prueba** con el componente **PaymentSheet** de Android. Stripe guarda los datos de la tarjeta: ni la app ni la base de datos los reciben.
+Los pagos usan **Stripe en modo prueba**. El usuario paga con una de sus **tarjetas guardadas**: la app confirma el pago con `PaymentLauncher` del SDK de Android, y las tarjetas nuevas se capturan con el formulario `CardMultilineWidget` de Stripe. Stripe guarda los datos de la tarjeta: ni la app ni la base de datos reciben el número completo.
 
 Las tarjetas guardadas del usuario (Perfil → Métodos de pago) y cómo se muestran al pagar están en [Métodos de pago](Metodos%20de%20pago.md).
 
@@ -24,13 +24,13 @@ Registrar el webhook en **Stripe → Developers → Webhooks**:
 - URL: `https://kjbmwwbzdsvunzndeusf.supabase.co/functions/v1/stripe-webhook`
 - Eventos: `payment_intent.succeeded` y `payment_intent.payment_failed`
 
-## 2. Flujo de pago (objetivo)
+## 2. Flujo de pago
 
 ```mermaid
 sequenceDiagram
     actor U as Usuario
     participant App
-    participant F as Edge Function<br/>crear-pago-reserva
+    participant F as Edge Function<br/>crear-pago-reserva-v2
     participant S as Stripe
     participant W as Edge Function<br/>stripe-webhook
     participant DB as Supabase
@@ -42,7 +42,7 @@ sequenceDiagram
     F->>S: Crea el PaymentIntent (monto calculado en el servidor)
     S-->>F: client_secret
     F-->>App: { clientSecret, customerId, desglose }
-    App->>S: PaymentSheet (el usuario captura su tarjeta)
+    App->>S: PaymentLauncher: confirma con la tarjeta guardada elegida (3D Secure si aplica)
     S-->>App: Completed / Canceled / Failed
     S->>W: payment_intent.succeeded (firmado)
     W->>W: Verifica la firma
@@ -54,7 +54,7 @@ sequenceDiagram
 ### Por qué el webhook confirma y no la app
 
 - Si la app se cierra justo después de pagar, la reserva igual queda confirmada.
-- Nadie puede confirmar una reserva sin pagar llamando a la API directamente (lo impide la política RLS del issue 8.2).
+- Nadie puede confirmar ni extender una reserva sin pagar llamando a la API directamente: desde la etapa 2 de RLS (17/11/2026), la app solo puede modificar `token_estacionamiento` (ver [Conexión API–Supabase](Conexion%20API%20Supabase.md)).
 - Stripe reintenta el webhook si falla, así que el pago siempre queda registrado.
 
 ## 3. Estado actual

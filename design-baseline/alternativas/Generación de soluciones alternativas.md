@@ -1,3 +1,5 @@
+# Generación de soluciones alternatvas - SmartParking
+
 Para el desarrollo del proyecto SmartParking, analizamos el problema principal relacionado con la dificultad de encontrar espacios de estacionamiento disponibles, lo que provoca pérdida de tiempo, congestión vehicular y una mala experiencia para los usuarios. Se realizó un proceso creativo con el propósito de identificar diferentes alternativas que permitieran atender el problema previamente definido. Para ello empleamos diferentes técnicas como lluvia de ideas y la realización de un mapa mental que facilitó aterrizar las alternativas. Se obtuvieron diversas posibles soluciones que posteriormente fueron revisadas y comparadas considerando criterios como su viabilidad, los beneficios que podrían aportar al sistema y las posibles limitaciones que implicarían.
 
 ## Alternativa 1

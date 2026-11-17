@@ -1,3 +1,5 @@
+# Problema y Objetivos - SmartParking
+
 ##  Descripción del problema
 
 En los centros comerciales uno de los principales inconvenientes que enfrentan los usuarios que acuden en coche es la dificultad para encontrar un espacio de estacionamiento disponible. La falta de disponibilidad de los cajones libres obliga a los conductores a recorrer innecesariamente el estacionamiento, generando congestión vehicular, pérdida de tiempo y estrés.

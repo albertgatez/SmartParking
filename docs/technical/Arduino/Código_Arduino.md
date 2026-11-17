@@ -46,7 +46,7 @@ Los sensores se leen uno a la vez, cada 40 ms, sin usar `delay()`. Cada cajón t
 | `1` | Ocupado | Rojo fijo. **Parpadea** si el cajón está reservado y quien se estacionó no ha escaneado el QR de la reserva. |
 | `2` | Reservado | Amarillo |
 
-Un cajón pasa a **ocupado** cuando el sensor detecta un objeto a menos de 10 cm durante 3 lecturas seguidas. Si no hay eco (no hay nada enfrente), se considera **libre**.
+Un cajón pasa a **ocupado** cuando el sensor detecta un objeto a menos de 10 cm durante 3 lecturas seguidas **y** el objeto permanece al menos 3 s. Para volver a **libre**, el objeto debe faltar al menos 1.5 s. Si no hay eco (no hay nada enfrente), se considera **libre**. El detalle de los filtros está en [Configuración de sensores](Configuracion_sensores.md).
 
 ### Parámetros principales
 
@@ -59,6 +59,8 @@ Se ajustan al inicio del sketch:
 | `DISTANCIA_MINIMA_CM` | 2 | Lecturas menores se descartan como ruido |
 | `DISTANCIA_MAXIMA_CM` | 100 | Alcance máximo de lectura |
 | `LECTURAS_CONFIRMACION` | 3 | Lecturas iguales seguidas para cambiar de estado |
+| `TIEMPO_PARA_OCUPAR_MS` | 3000 | Tiempo mínimo de presencia para pasar a ocupado |
+| `TIEMPO_PARA_LIBERAR_MS` | 1500 | Tiempo mínimo de ausencia para volver a libre |
 | `PAUSA_ENTRE_SENSORES_MS` | 40 | Pausa entre sensores para que no se interfieran |
 | `intervaloEnvioMs` | 2000 | Cada cuánto se reenvía el estado de todos los cajones |
 

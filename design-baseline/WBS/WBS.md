@@ -1,3 +1,5 @@
+# WBS - SmartParking
+
 | **Fase**      | **Actividad**                        | **Subtareas**                                              | **Responsable**     | **Duración** | **Inicio** | **Fin**   |
 | ------------- | ------------------------------------ | ---------------------------------------------------------- | ------------------- | ------------ | ---------- | --------- |
 | _Planeación_  | Levantamiento de requisitos          | Identificación de necesidades, entrevistas, documentación  | Todo el equipo      | 2 semanas    | Semana 1   | Semana 2  |

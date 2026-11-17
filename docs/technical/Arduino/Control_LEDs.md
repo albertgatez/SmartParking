@@ -1,4 +1,4 @@
-# Control de LEDs
+# Control de LEDs — SmartParking
 
 Cada cajón tiene tres LEDs que muestran su estado. Solo hay un LED encendido a la vez por cajón.
 

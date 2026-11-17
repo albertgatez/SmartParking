@@ -1,8 +1,10 @@
-# Evidencia — Políticas RLS (etapa 1)
+# Evidencia — Políticas RLS (etapas 1 y 2)
 
 **Issue:** 8.2 Conexión API–Supabase
-**Fecha:** 06/11/2026
-**Script aplicado:** `software/supabase/migrations/20261106_rls_etapa1.sql`
+**Fechas:** etapa 1 el 06/11/2026; etapa 2 el 17/11/2026 (ver la sección "Etapa 2" al final)
+**Scripts aplicados:** `software/supabase/migrations/20261106_rls_etapa1.sql`, `20261117_rls_preparacion_etapa2.sql` y `20261106_rls_etapa2.sql`
+
+# Etapa 1
 
 ## Qué se cambió
 
@@ -115,4 +117,61 @@ El gateway usa la llave secreta, que no está sujeta a RLS, por lo que puede seg
 | Prueba de que un usuario no puede modificar datos de otro | Cumplido |
 | El gateway sigue actualizando los cajones | Cumplido |
 | Políticas versionadas en el repositorio | Cumplido: `software/supabase/migrations/20261106_rls_etapa1.sql` |
-| Ocultar las reservas de otros usuarios (lectura) | Pendiente: etapa 2 |
+| Ocultar las reservas de otros usuarios (lectura) | Cumplido en la etapa 2 (abajo) |
+
+# Etapa 2
+
+**Fecha:** 17/11/2026
+**Scripts aplicados (en este orden):** `20261117_rls_preparacion_etapa2.sql` y `20261106_rls_etapa2.sql`, desde el SQL Editor del panel.
+
+## Qué se cambió
+
+| Elemento | Antes | Después |
+|---|---|---|
+| `Reserva`, SELECT | Todos veían todas las reservas, con `id_usuario` y `token_estacionamiento` | Cada usuario solo ve las suyas (`reserva_select_propias`) |
+| `Reserva`, UPDATE | El dueño podía cambiar cualquier columna, incluidas `confirmada` y `tiempo_fin` (confirmar o extender sin pagar) | Solo la columna `token_estacionamiento`; además, el trigger `trg_reserva_proteger_confirmada` rechaza cambios a `confirmada` |
+| `Reserva`, INSERT | Cualquier columna | Solo `id_usuario`, `id_cajon`, `tiempo_inicio`, `tiempo_fin` y `confirmada` |
+| `Usuario`, UPDATE | El dueño podía cambiar cualquier columna, incluida `customer_id` | Solo `nombre`, `correo`, `telefono`, `discapacitado`, `url_foto_perfil` y `fcm_token` |
+| Vista `horarios_ocupados` | Permitía INSERT, UPDATE y DELETE a `anon` y `authenticated`, saltándose el RLS de `Reserva` | Solo lectura; se agregó la columna `id` |
+| `obtener_cajones_con_reservas_hoy` | Ejecutable sin sesión (`SECURITY DEFINER`) | Sin permiso de ejecución; después se eliminó |
+| `Pagos`, SELECT | Política `usuarios_pueden_ver_sus_pagos` | Política `pagos_select_propios` (misma regla, solo `authenticated`) |
+
+Antes de aplicar la etapa 2, la app se cambió para leer la disponibilidad de `horarios_ocupados` y para no confirmar reservas (las confirma `stripe-webhook`).
+
+## Verificación en la base de datos
+
+Consulta de solo lectura a `pg_policies`, `information_schema.column_privileges`, `role_table_grants` y `pg_trigger` después de aplicar los scripts:
+
+| Revisión | Resultado |
+|---|---|
+| Políticas de `Reserva` | `reserva_select_propias` (SELECT), `reserva_insert_propia_pendiente`, `reserva_update_propias`, `reserva_delete_propias_pendientes`. Ya no existe `Ver reservas` |
+| Columnas con UPDATE en `Reserva` para `authenticated` | `token_estacionamiento` |
+| Columnas con INSERT en `Reserva` para `authenticated` | `confirmada`, `id_cajon`, `id_usuario`, `tiempo_fin`, `tiempo_inicio` |
+| Columnas con UPDATE en `Usuario` para `authenticated` | `correo`, `discapacitado`, `fcm_token`, `nombre`, `telefono`, `url_foto_perfil` |
+| Columnas con INSERT en `Usuario` para `authenticated` | `correo`, `discapacitado`, `id`, `nombre`, `telefono` |
+| Permisos de `anon` y `authenticated` sobre `horarios_ocupados` | Solo `SELECT` |
+| Definición de `horarios_ocupados` | `SELECT id_cajon, tiempo_inicio, tiempo_fin, id FROM "Reserva"` |
+| Trigger `trg_reserva_proteger_confirmada` | Activo |
+| Política de `Pagos` | `pagos_select_propios` |
+
+## Prueba con la app
+
+| # | Prueba | Resultado esperado | Resultado |
+|---|---|---|---|
+| 1 | Seleccionar cajón con una reserva de otra cuenta en ese horario | El horario aparece ocupado | Terminado |
+| 2 | Reservar y pagar | La reserva queda confirmada (la confirma `stripe-webhook`) | Terminado |
+| 3 | Escanear el QR | Se guarda `token_estacionamiento` | Terminado |
+| 4 | Extender 1 hora | `tiempo_fin` aumenta 1 hora | Terminado |
+| 5 | Editar perfil y foto | Se guardan los cambios | Terminado |
+
+Resultados registrados por el equipo el 17/11/2026.
+
+## Criterios de terminado
+
+| Criterio | Estado |
+|---|---|
+| Cada usuario solo lee sus reservas | Cumplido (verificado en la BD) |
+| La app no puede confirmar ni extender reservas sin pagar | Cumplido (verificado en la BD) |
+| La app no puede cambiar `customer_id` | Cumplido (verificado en la BD) |
+| Nadie puede escribir reservas a través de `horarios_ocupados` | Cumplido (verificado en la BD) |
+| La app funciona con las políticas nuevas | Cumplido (prueba con la app) |

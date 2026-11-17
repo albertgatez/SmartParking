@@ -97,7 +97,7 @@ Al desconectar y volver a conectar el USB del Arduino, el gateway detectó la de
 |---|---|
 | El gateway lee las líneas `Sensor N: E` de los 3 cajones | Terminado |
 | Mosquitto corriendo como servicio, sin acceso anónimo | Terminado (ver Evidencia_Broker_MQTT.md) |
-| El gateway corre como servicio y arranca solo | Temrinado |
-| Se reconecta solo al desconectar y conectar el USB | Temrinado |
-| Puerto serial estable entre reinicios (`/dev/serial/by-id/…`) | Temrinado |
-| Conexiones y configuración documentadas | Terminado `raspberry/README.md` y este documento |
+| El gateway corre como servicio y arranca solo | Terminado |
+| Se reconecta solo al desconectar y conectar el USB | Terminado |
+| Puerto serial estable entre reinicios (`/dev/serial/by-id/…`) | Terminado |
+| Conexiones y configuración documentadas | Terminado (`software/raspberry/README.md` y este documento) |

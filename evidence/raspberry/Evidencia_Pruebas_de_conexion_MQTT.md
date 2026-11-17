@@ -2,7 +2,7 @@
 
 **Issue:** 9.3 Pruebas de conexión MQTT
 **Fecha:** 06/11/2026
-**Equipo:** Raspberry Pi 4 con Mosquitto 2.0.21, gateway `raspberry/gateway.py` y Arduino Uno con 3 sensores HC-SR04
+**Equipo:** Raspberry Pi 4 con Mosquitto 2.0.21, gateway `software/raspberry/gateway.py` y Arduino Uno con 3 sensores HC-SR04
 
 ## Prueba 1: publicación y recepción de los 3 cajones
 
@@ -51,8 +51,8 @@ Al abrir un nuevo `mosquitto_sub`, aparecen de inmediato `smartparking/gateway/e
 
 | # | Falla provocada | Comportamiento esperado | Resultado | Tiempo de recuperación |
 |---|---|---|---|---|
-| 1 | Detener el broker: `sudo systemctl stop mosquitto` y volver a iniciarlo | El gateway sigue leyendo el Arduino y se reconecta solo al broker | Se reconectó solo | ___ s |
-| 2 | Desconectar y reconectar el USB del Arduino | El gateway detecta la desconexión, reabre el puerto y vuelve a publicar | ✅ Se recuperó solo | ___ s |
+| 1 | Detener el broker: `sudo systemctl stop mosquitto` y volver a iniciarlo | El gateway sigue leyendo el Arduino y se reconecta solo al broker | Se reconectó solo | 5 s como máximo (aproximado, observado) |
+| 2 | Desconectar y reconectar el USB del Arduino | El gateway detecta la desconexión, reabre el puerto y vuelve a publicar | Se recuperó solo | 5 s como máximo (aproximado, observado) |
 
 El gateway reintenta la conexión con el broker con espera creciente de 1 a 30 s, y reabre el puerto serial cada 3 s.
 
@@ -62,6 +62,6 @@ El gateway reintenta la conexión con el broker con espera creciente de 1 a 30 s
 |---|---|
 | Publicación y recepción de mensajes de los 3 cajones | Terminado |
 | Mensajes retenidos con el estado actual | Terminado |
-| Reconexión automática tras caída del broker (RNF-03, < 30 s) | Terminado |
+| Reconexión automática tras caída del broker (RNF-03, < 30 s) | Terminado (5 s como máximo) |
 | Recuperación tras desconexión del Arduino | Terminado |
 | Resultados documentados | Terminado (Este documento) |

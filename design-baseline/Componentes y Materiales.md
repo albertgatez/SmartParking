@@ -1,3 +1,5 @@
+# Selección de Componentes y Materiales - SmartParking
+
 ## Lista preliminar de componentes
 
 | **Componente**                       | **Función dentro del proyecto**                                       | **Cantidad aproximada** |

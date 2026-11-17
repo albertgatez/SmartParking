@@ -456,7 +456,11 @@ public class SupabaseClient {
         });
     }
 
-    /** Reservas (pendientes o confirmadas) de los cajones indicados que se cruzan con el día de hoy. */
+    /**
+     * Reservas (pendientes o confirmadas) de los cajones indicados que se cruzan con el día de hoy.
+     * Se leen de la vista horarios_ocupados (solo cajón y horario, sin datos del usuario), porque
+     * con la etapa 2 de RLS cada usuario solo puede leer sus propias filas de Reserva.
+     */
     private void obtenerReservasDeHoy(int estacionamientoId, List<Cajon> cajones, SupabaseCallbackCajonesReservas callback) {
         if (cajones.isEmpty()) {
             obtenerUrlImagenCajones(estacionamientoId, cajones, new ArrayList<>(), callback);
@@ -470,11 +474,11 @@ public class SupabaseClient {
         }
 
         Request request = new Request.Builder()
-                .url(rest("Reserva")
+                .url(rest("horarios_ocupados")
                         .addQueryParameter("id_cajon", "in.(" + ids + ")")
                         .addQueryParameter("tiempo_inicio", "lt." + DateTimeUtils.finDelDiaUTC())
                         .addQueryParameter("tiempo_fin", "gt." + DateTimeUtils.inicioDelDiaUTC())
-                        .addQueryParameter("select", "id,id_usuario,id_cajon,tiempo_inicio,tiempo_fin,confirmada")
+                        .addQueryParameter("select", "id,id_cajon,tiempo_inicio,tiempo_fin")
                         .build())
                 .get()
                 .build();
@@ -631,12 +635,13 @@ public class SupabaseClient {
     /**
      * Revisa que no exista otra reserva (pendiente o confirmada) del mismo cajón que se cruce
      * con el intervalo [inicioUTC, finUTC). Se usa antes de reservar y de extender.
+     * Consulta la vista horarios_ocupados, que ve las reservas de todos sin datos del usuario.
      *
      * @param excluirReservaId id de la reserva propia que no debe contarse (-1 si no aplica)
      */
     public void verificarDisponibilidad(int idCajon, String inicioUTC, String finUTC, int excluirReservaId,
                                         SupabaseCallbackDisponibilidad callback) {
-        HttpUrl.Builder url = rest("Reserva")
+        HttpUrl.Builder url = rest("horarios_ocupados")
                 .addQueryParameter("id_cajon", "eq." + idCajon)
                 .addQueryParameter("tiempo_inicio", "lt." + finUTC)
                 .addQueryParameter("tiempo_fin", "gt." + inicioUTC)
@@ -785,15 +790,8 @@ public class SupabaseClient {
         });
     }
 
-    /**
-     * Confirma una reserva pendiente (confirmada = true).
-     * NOTA: en la fase 2 esto lo hará el webhook de Stripe en el servidor, no la app.
-     */
-    public void confirmarReserva(int reservaId, SupabaseCallback callback) {
-        JsonObject json = new JsonObject();
-        json.addProperty("confirmada", true);
-        patchReserva(reservaId, json, "confirmar", callback);
-    }
+    // La app ya no confirma ni extiende reservas: lo hace stripe-webhook al recibir el pago.
+    // Con la etapa 2 de RLS, la app solo puede modificar token_estacionamiento.
 
     /** Elimina una reserva (cuando expira el temporizador de pago). */
     public void eliminarReserva(int reservaId, SupabaseCallback callback) {
@@ -809,13 +807,6 @@ public class SupabaseClient {
         JsonObject json = new JsonObject();
         json.addProperty("token_estacionamiento", token);
         patchReserva(reservaId, json, "actualizar token", callback);
-    }
-
-    /** Extiende el tiempo de una reserva actualizando tiempo_fin. */
-    public void extenderReserva(int reservaId, String nuevoTiempoFin, SupabaseCallback callback) {
-        JsonObject json = new JsonObject();
-        json.addProperty("tiempo_fin", nuevoTiempoFin);
-        patchReserva(reservaId, json, "extender", callback);
     }
 
     private void patchReserva(int reservaId, JsonObject cambios, String accion, SupabaseCallback callback) {

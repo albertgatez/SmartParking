@@ -19,7 +19,8 @@ Esta carpeta está en `software/supabase/`. Si se usa la CLI de Supabase, los co
 | `20261106_notificaciones_envio.sql` | Trigger que envía cada aviso a la Edge Function `enviar-notificacion` | 11.2 | Aplicada |
 | `20261109_notificaciones_ocultar.sql` | Columna `oculta` en `Notificacion` y política para que cada usuario oculte sus avisos (X o deslizar en Avisos). No se borran para que los recordatorios no se reenvíen | 11.2 | Pendiente |
 | `20261106_rls_etapa1.sql` | RLS etapa 1: cada usuario solo modifica sus reservas; los cajones solo los modifica el gateway; vista `horarios_ocupados` | 8.2 | Aplicada el 06/11/2026 |
-| `20261106_rls_etapa2.sql` | RLS etapa 2: cada usuario solo ve sus reservas; la app ya no puede confirmar reservas | 8.2 | Pendiente |
+| `20261117_rls_preparacion_etapa2.sql` | Quita los permisos de escritura de la vista `horarios_ocupados` (permitía borrar o modificar reservas ajenas sin sesión), le agrega la columna `id` y bloquea la función sin uso `obtener_cajones_con_reservas_hoy` | 8.2 | Aplicada el 17/11/2026 |
+| `20261106_rls_etapa2.sql` | RLS etapa 2: cada usuario solo ve sus reservas; permisos por columna en `Reserva` (la app solo escribe `token_estacionamiento`) y en `Usuario` (ya no puede cambiar `customer_id` ni `bienvenida_enviada`) | 8.2 | Aplicada el 17/11/2026 |
 | `20261018_pagos_desglose.sql` | Llave primaria y desglose de pagos (subtotal, comisión, descuento) | 10.1, 12.2 | Aplicada (verificado el 07/11/2026: `Pagos` ya tiene `comision`, `descuento`, `tipo` y `stripe_payment_intent`) |
 
 Las migraciones de notificaciones (`20261105_notificaciones_token.sql`, `20261106_notificaciones_eventos.sql` y `20261106_notificaciones_envio.sql`) están documentadas en `docs/technical/Application/Notificaciones en Supabase.md`. En el repositorio, el secreto del header `x-webhook-secret` va como `<secreto>`; el valor real solo está en la base de datos y en los secretos de las Edge Functions.
@@ -32,11 +33,15 @@ Las migraciones de notificaciones (`20261105_notificaciones_token.sql`, `2026110
 
 Cada migración se aplica **una sola vez**. Si se vuelve a ejecutar, marca error porque los objetos ya existen.
 
-### Requisitos de las migraciones pendientes
+### Requisitos de las migraciones de RLS
+
+Ya aplicadas; se dejan como referencia del orden.
 
 | Migración | Requisito |
 |---|---|
-| `rls_etapa2` | La app consulta la disponibilidad desde la vista `horarios_ocupados`, y deja de confirmar la reserva por su cuenta (el webhook de Stripe ya la confirma) |
+| `rls_etapa1` | El `.env` del gateway de la Raspberry debe tener la llave secreta (`sb_secret_...`). Con la llave anónima el gateway deja de poder actualizar `Cajon` |
+| `rls_preparacion_etapa2` | Aplicada `rls_etapa1` (crea la vista `horarios_ocupados`). Debe ir antes de instalar la app que pide la columna `id` de la vista |
+| `rls_etapa2` | Aplicada `rls_preparacion_etapa2` e instalada la app que lee la disponibilidad de `horarios_ocupados` y ya no confirma reservas (el webhook de Stripe las confirma) |
 
 ## Edge Functions
 

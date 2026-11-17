@@ -2,7 +2,7 @@
 
 Relaciones entre las tablas del esquema `public` en Supabase. Lo que se documenta aquí está **verificado en la base de datos**, no solo en el diagrama entidad-relación.
 
-Fecha de verificación: 16/10/2026 (tablas originales). La tabla `Notificacion` se agregó el 06/11/2026; sus llaves foráneas están tomadas de la migración `20261106_notificaciones_eventos.sql` y los nombres de restricción son los que PostgreSQL asigna por defecto. Conviene volver a ejecutar la consulta de la sección 1 para confirmarlos.
+Fecha de verificación: 17/11/2026. Las 7 llaves foráneas de la tabla coinciden con la base de datos, incluidas las de `Notificacion` (tabla agregada el 06/11/2026).
 
 ## 1. Llaves foráneas en la base de datos
 

@@ -168,14 +168,13 @@ sequenceDiagram
     EF->>EF: Calcula el monto y valida el cupón
     EF->>ST: Crea PaymentIntent
     EF-->>SC: clientSecret y desglose
-    SC->>ST: Abre PaymentSheet
+    SC->>ST: PaymentLauncher confirma con la tarjeta elegida
     alt Pago completado
         ST-->>SC: Completed
         ST->>W: payment_intent.succeeded
         W->>DB: confirmada = true y registro en Pagos
         SC->>R: confirmarReservaActual()
-        R->>DB: PATCH confirmada = true
-        R->>R: Quita la expiración y notifica a Inicio
+        R->>R: Marca la reserva local como confirmada, quita la expiración y notifica a Inicio
     else Cancelado o fallido
         ST-->>SC: Canceled / Failed
         SC->>SC: Reanuda el temporizador con el tiempo que quedaba
@@ -214,7 +213,7 @@ sequenceDiagram
         H-->>U: "El cajón ya está reservado en ese horario. Prueba con menos horas."
     else Disponible
         H->>API: obtenerClientSecret(idReserva, "extension", horas)
-        H->>ST: Abre PaymentSheet
+        H->>ST: PaymentLauncher confirma con la tarjeta elegida
         ST-->>H: Completed
         ST->>W: payment_intent.succeeded
         W->>DB: tiempo_fin + horas y registro en Pagos
@@ -250,5 +249,4 @@ Las reservas **pendientes no se recuperan**, porque su tiempo para pagar se cont
 
 - **Expiración desde el servidor:** la reserva pendiente se borra de la BD cuando la app detecta que venció. Si el usuario cierra la app y no la vuelve a abrir, la fila se queda en la BD y el horario aparece ocupado. Se puede resolver con un job programado (`pg_cron`) que borre las reservas con `confirmada = false` y `expiracion < now()`, o filtrando esas filas en las consultas de disponibilidad.
 - **Una reserva por usuario en el servidor:** la regla de una sola reserva se valida en el teléfono. Si se reinstala la app con una reserva pendiente, el servidor permitiría crear otra; conviene validarlo con una restricción o política en la BD.
-- **Confirmación solo por webhook:** el webhook ya confirma la reserva, pero la app todavía hace `PATCH confirmada = true` después del pago. Hay que quitarlo antes de aplicar `rls_etapa2`, que impide a la app confirmar reservas.
 - **Reservar otros días:** la selección solo permite el día de hoy.

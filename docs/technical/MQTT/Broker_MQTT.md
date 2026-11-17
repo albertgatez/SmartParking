@@ -1,4 +1,4 @@
-# Configuración del broker MQTT
+# Configuración del broker MQTT - SmartParking
 
 El broker **Mosquitto** corre en la Raspberry Pi. El gateway (`raspberry/gateway.py`) publica ahí el estado de cada cajón, y cualquier otro cliente (un panel, una pantalla en la entrada del estacionamiento) puede suscribirse para recibirlo en tiempo real.
 

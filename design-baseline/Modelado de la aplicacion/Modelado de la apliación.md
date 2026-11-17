@@ -1,4 +1,4 @@
-## Descripción del modelo
+## Descripción del modelado de la aplicación - SmartParking
 
 ### (P1): Inicio de sesión
 
