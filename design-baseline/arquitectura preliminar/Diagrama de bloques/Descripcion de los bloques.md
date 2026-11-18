@@ -1,18 +1,18 @@
-## Descripción de los bloques y relaciones
+## Descripción de los bloques y relaciones - SmartParking 
 
-### - Adquisición de datos 
+### - Adquisición de datos:
 
 Se encarga de obtener la información del entorno físico, principalmente de la detección de los vehículos y del estado de los espacios vacantes. Utiliza sensores ultrasónicos HC-SR04 que miden la ocupación de los espacios, cuyos datos son procesados por un microcontrolador Arduino y enviados a una Raspberry Pi que actúa como broker MQTT. Finalmente, la información es transmitida al bloque de Procesamiento mediante dicho protocolo. 
 
-### - Procesamiento de datos
+### - Procesamiento de datos:
 
 Se encarga de recibir, interpretar y estructurar la información proveniente de los sensores, sincronizándola con la base de datos y la lógica de negocio. Incluye un cliente MQTT que recibe los datos del broker, un API REST (Supabase) que gestiona la comunicación con la base de datos, una lógica de negocio que valida disponibilidad, gestiona reservas y pagos, y un módulo de control de errores que monitorea el sistema. Administra la comunicación bidireccional con los bloques de Adquisición, Almacenamiento e Interfaz de usuario, además de mantener un flujo hacia comunicación externa. 
 
-### - Almacenamiento de datos
+### - Almacenamiento de datos:
 
 Administra la persistencia de los datos del sistema, garantizando su integridad, seguridad y respaldo. Está compuesto por una base de datos PostgreSQL gestionada mediante Supabase, donde se almacenan entidades como usuarios, espacios, reservas y pagos. Incluye organización en tablas y mecanismos de copia de seguridad automatizada. Mantiene comunicación bidireccional con el bloque de procesamiento de datos.
 
-### - Interfaz de Usuario
+### - Interfaz de Usuario:
 
 Permite la interacción directa con el usuario final a través de una aplicación móvil. Incluye una pantalla principal que muestra los espacios disponibles, un módulo de reservas para gestionar apartados, un módulo de pagos que procesa transacciones y un sistema de notificaciones para informar eventos en tiempo real. Gestiona la comunicación bidireccional con la lógica de negocio y recibe información de forma unidireccional desde comunicación externa.
 

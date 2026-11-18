@@ -1,4 +1,4 @@
-## Modelo entidad-relación
+## Modelo entidad-relación - SmartParking
 
 El modelo representa la información que necesita SmartParking para gestionar estacionamientos, cajones, reservas y pagos. Se compone de seis entidades:
 

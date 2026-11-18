@@ -19,7 +19,9 @@ Cada cambio detectado por un sensor se guarda en `Cajon.estado_cajon` (`0` libre
 18:09:17,604 [INFO] Supabase: cajon 3 = libre
 ```
 
-**Resultado:** El estado queda guardado en Supabase entre 0.3 y 0.9 s después de que el sensor lo detecta. El requisito RNF-03 pide menos de 5 s.
+**Resultado:** El estado queda guardado en Supabase entre 0.3 y 0.9 s después de que el Arduino lo reporta. El requisito RNF-03 pide menos de 5 s.
+
+Estas mediciones son anteriores al filtro de tiempo del sketch (08/11/2026). Con el filtro, el Arduino espera 3 s de presencia continua antes de reportar ocupado, y el tiempo total del sensor a Supabase quedó entre 3.4 y 3.6 s (ver `evidence/hardware/Evidencia_Pruebas_de_deteccion_del_sensor.md`).
 
 ## 2. Reservas → LEDs del Arduino
 
@@ -35,14 +37,14 @@ El gateway consulta cada 5 s las reservas confirmadas en curso y manda al Arduin
 
 | Reserva | Cajón | Horario | Observado | Resultado |
 |---|---|---|---|---|
-| 187 | 3 | 16:00 – 18:00 | Al arrancar el gateway, el cajón 3 se encendió en amarillo; a las 18:00 regresó a libre | Temrinado |
+| 187 | 3 | 16:00 – 18:00 | Al arrancar el gateway, el cajón 3 se encendió en amarillo; a las 18:00 regresó a libre | Terminado |
 | 188 | 3 | 18:00 – 19:00 | Se reinició la Raspberry con la reserva activa y el cajón 3 recuperó su estado de reservado | Terminado |
 
 ### Prueba del flujo completo desde la app
 
 | # | Paso | Resultado esperado | Resultado |
 |---|---|---|---|
-| 1 | Crear y pagar una reserva en la app (tarjeta de prueba de Stripe) | En menos de 5 s el LED del cajón cambia a amarillo (`Arduino <- R<n>`) | ✅ |
+| 1 | Crear y pagar una reserva en la app (tarjeta de prueba de Stripe) | En menos de 5 s el LED del cajón cambia a amarillo (`Arduino <- R<n>`) | Terminado |
 | 2 | Poner un objeto frente al sensor del cajón reservado sin escanear el QR | LED rojo parpadeando | Terminado |
 | 3 | Escanear el QR en la app | En menos de 5 s el rojo queda fijo (`Arduino <- C<n>`) | Terminado |
 | 4 | Retirar el objeto con la reserva vigente | Vuelve a amarillo | Terminado |
@@ -57,9 +59,9 @@ El gateway consulta cada 5 s las reservas confirmadas en curso y manda al Arduin
 
 | Criterio | Estado |
 |---|---|
-| Cada cambio de un sensor se refleja en `Cajon.estado_cajon` en menos de 5 s | Terminado (0.3 – 0.9 s) |
+| Cada cambio de un sensor se refleja en `Cajon.estado_cajon` en menos de 5 s | Terminado (0.3 – 0.9 s del gateway a Supabase; 3.4 – 3.6 s en total con el filtro de tiempo) |
 | Una reserva confirmada enciende el LED amarillo en menos de 5 s | Terminado |
 | Al escanear el QR el rojo deja de parpadear; al terminar la reserva vuelve a libre | Terminado |
 | Si se pierde Internet, se guardan los estados pendientes al reconectar | Implementado en el gateway |
-| El gateway usa la llave `service_role` en su `.env` | Pendiente; se cambia al aplicar las políticas RLS |
+| El gateway usa la llave secreta (`sb_secret_...`) en su `.env` | Terminado el 06/11/2026, antes de aplicar la etapa 1 de RLS (ver `evidence/supabase-bd/Evidencia_Politicas_RLS.md`) |
 | Resultados documentados | Terminado (Este documento) |

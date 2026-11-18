@@ -11,7 +11,7 @@
 | Sistema operativo | Debian GNU/Linux 13 (trixie) |
 | Arquitectura | aarch64 (64 bits) |
 | Broker | Mosquitto 2.0.21 |
-| Configuración | `raspberry/mosquitto/smartparking.conf` y `raspberry/mosquitto/acl` |
+| Configuración | `software/raspberry/mosquitto/smartparking.conf` y `software/raspberry/mosquitto/acl` |
 
 ```
 $ cat /etc/os-release
@@ -86,5 +86,5 @@ El `mosquitto.conf` principal de Debian ya define `persistence` y `persistence_l
 |---|---|
 | Mosquitto instalado y corriendo como servicio en la Raspberry Pi | Terminado |
 | Sin acceso anónimo (usuario y contraseña) | Terminado |
-| Tópicos definidos y documentados | Terminado `docs/technical/MQRR/Broker_MQTT.md` |
-| Configuración en el repositorio sin contraseñas | Terminado `raspberry/mosquitto/` |
+| Tópicos definidos y documentados | Terminado (`docs/technical/MQTT/Broker_MQTT.md`) |
+| Configuración en el repositorio sin contraseñas | Terminado (`software/raspberry/mosquitto/`) |

@@ -94,7 +94,7 @@ Mediciones ya registradas el 06/11/2026 con el prototipo en el protoboard:
 | 2 | 0.87 s |
 | 3 | 0.41 s |
 
-Tiempo de confirmación del sensor (por diseño): 3 lecturas × 120 ms ≈ 0.36 s.
+En esa fecha el sketch todavía no tenía el filtro de tiempo: el sensor confirmaba el cambio con 3 lecturas × 120 ms ≈ 0.36 s.
 
 Mediciones con el prototipo montado en la maqueta:
 
@@ -119,7 +119,7 @@ Requisito RNF-03: menos de 5 s.
 
 ## Ajustes realizados
 
-Si algún parámetro se cambió durante las pruebas, registrarlo aquí:
+Parámetros que se cambiaron durante las pruebas:
 
 | Parámetro | Valor anterior | Valor nuevo | Motivo |
 |---|---|---|---|
@@ -147,5 +147,13 @@ Los demás parámetros (umbral de 10 cm, histéresis de 3 cm, 3 lecturas de conf
 
 ## Evidencia adicional
 
-- Fotos del prototipo montado: `evidence/hardware/`
+Fotos del prototipo (sensores, LEDs, Arduino y Raspberry Pi):
+
+![Prototipo, foto 1](E1.jpeg)
+
+![Prototipo, foto 2](E2.jpeg)
+
+![Prototipo, foto 3](E3.jpeg)
+
+![Prototipo, foto 4](E4.jpeg)
 

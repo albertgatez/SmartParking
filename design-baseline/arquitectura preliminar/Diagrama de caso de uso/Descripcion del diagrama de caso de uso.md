@@ -1,4 +1,4 @@
-# Descripción del diagrama de caso de uso
+# Descripción del diagrama de caso de uso - SmartParking 
 El sistema permite al usuario interactuar con el servicio de estacionamiento de manera digital, facilitando la gestión completa desde la reserva hasta el pago y la salida. Una de las primeras funcionalidades es escanear códigos QR, lo cual le permite registrar su llegada o salida del estacionamiento de forma rápida. El usuario también puede consultar el historial de pagos, visualizando los montos y fechas de sus transacciones anteriores.
 
 Otra función es consultar la disponibilidad de espacios, lo que le permite conocer en tiempo real los lugares libres antes de realizar una reserva. Una vez elegido el espacio, el usuario puede realizar el pago correspondiente mediante la aplicación, completando el proceso de manera segura y automatizada. 

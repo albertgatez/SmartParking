@@ -1,3 +1,5 @@
+# Requerimientos - SmartParking
+
 El éxito en el desarrollo de un sistema de software depende en gran medida de una correcta definición de sus requerimientos desde las etapas iniciales del proyecto. Establecer de forma clara y detallada los requisitos permite alinear las expectativas del cliente con el trabajo del equipo de desarrollo, reducir ambigüedades, prevenir errores costosos y asegurar que el producto final cumpla con las necesidades reales de los usuarios. En este contexto, el presente documento tiene como propósito definir y presentar de manera estructurada los requisitos y especificaciones, tanto funcionales como no funcionales, que deberá cumplir el software SmartParking al finalizar su construcción. La correcta documentación e identificación de estos requerimientos constituye la base para el diseño, desarrollo, validación y mantenimiento del sistema.
 
 ## Requisitos Funcionales  

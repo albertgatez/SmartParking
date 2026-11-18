@@ -1,4 +1,4 @@
-# Configuración del comportamiento de los sensores
+# Configuración del comportamiento de los sensores — SmartParking
 
 Cómo decide el Arduino si un cajón está **libre** u **ocupado** con los sensores HC-SR04. Todos los parámetros están al inicio de `smartparking_sensores.ino`.
 
@@ -12,6 +12,8 @@ Cómo decide el Arduino si un cajón está **libre** u **ocupado** con los senso
 | `DISTANCIA_MAXIMA_CM` | 100 cm | Alcance máximo; más lejos o sin eco = no hay nada. |
 | `TIMEOUT_ECO_US` | ≈ 5.8 ms | Tiempo máximo de espera del eco, calculado para 100 cm. |
 | `LECTURAS_CONFIRMACION` | 3 | Lecturas iguales seguidas para aceptar un cambio de estado. |
+| `TIEMPO_PARA_OCUPAR_MS` | 3000 ms | Tiempo que el objeto debe permanecer para pasar a **ocupado**. |
+| `TIEMPO_PARA_LIBERAR_MS` | 1500 ms | Tiempo que debe faltar el objeto para volver a **libre**. |
 | `PAUSA_ENTRE_SENSORES_MS` | 40 ms | Pausa entre la lectura de un sensor y el siguiente. |
 | `intervaloEnvioMs` | 2000 ms | Cada cuánto se reenvía el estado de todos los cajones (1–5 s). |
 
@@ -37,12 +39,13 @@ Cuando no hay nada frente al sensor, el pulso no regresa y `pulseIn` devuelve 0.
 
 ### Filtro contra lecturas falsas
 
-El HC-SR04 a veces da lecturas sueltas incorrectas (rebotes, ángulos, un 1 cm falso). Se usan dos filtros:
+El HC-SR04 a veces da lecturas sueltas incorrectas (rebotes, ángulos, un 1 cm falso), y una persona que pasa frente al sensor no debe marcar el cajón como ocupado. Se usan tres filtros:
 
 1. **Lecturas descartadas:** las menores a 2 cm no cuentan ni a favor ni en contra.
 2. **3 lecturas consecutivas:** el estado solo cambia si 3 lecturas seguidas indican lo mismo. Si una lectura contradice, el contador se reinicia.
+3. **Filtro de tiempo:** además, el cambio debe durar un tiempo mínimo desde la primera lectura distinta: **3 s** para pasar a ocupado (`TIEMPO_PARA_OCUPAR_MS`) y **1.5 s** para volver a libre (`TIEMPO_PARA_LIBERAR_MS`). Si en ese tiempo llega una lectura igual al estado actual, se vuelve a empezar.
 
-Cada sensor se lee cada 120 ms (3 sensores × 40 ms), así que un cambio real se confirma en unos **0.36 s**, lo bastante rápido para el usuario y suficiente para ignorar picos de ruido.
+Cada sensor se lee cada 120 ms (3 sensores × 40 ms). Con el filtro de tiempo, un auto se confirma como ocupado en unos **3 s** y la salida se confirma en unos **1.5 s**. En las pruebas del 08/11/2026 el cambio llegó a Supabase en 3.4 a 3.6 s, dentro de los 5 s de RNF-03 (ver `evidence/hardware/Evidencia_Pruebas_de_deteccion_del_sensor.md`).
 
 ### Pausa entre sensores
 
@@ -83,6 +86,8 @@ Procedimiento: colocar un objeto frente al sensor 1 a la distancia indicada (med
 | 10 | Mano que pasa rápido (< 0.3 s) | 6 cm por un instante | Sin cambio | 0 – libre (sin cambio) | Verde | Si |
 
 **Resultado:** 10 de 10 casos correctos. El cambio de estado se observó en menos de medio segundo y no hubo cambios falsos durante 5 minutos con el cajón vacío.
+
+Estas pruebas se hicieron **antes** de agregar el filtro de tiempo. Con el filtro, el cambio a ocupado tarda unos 3 s, y una persona que pasa caminando (1 a 2 s) ya no cambia el estado. Las pruebas con la versión actual están en `evidence/hardware/Evidencia_Pruebas_de_deteccion_del_sensor.md`.
 
 ### Prueba de frecuencia de envío
 

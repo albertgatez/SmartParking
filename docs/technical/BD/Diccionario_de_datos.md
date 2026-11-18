@@ -101,7 +101,7 @@ Registro de cada pago hecho con Stripe para una reserva o una extensión de tiem
 
 | Campo | Tipo | Nulo | Por defecto | Llave | Descripción |
 |---|---|---|---|---|---|
-| `id` | `bigint` | No | `nextval('Pagos_id_seq')` | | Identificador del pago (autoincremental). |
+| `id` | `bigint` | No | `nextval('Pagos_id_seq')` | PK | Identificador del pago (autoincremental). |
 | `id_reserva` | `text` | No | - |- | Reserva que se pagó. |
 | `id_usuario` | `varchar` | Sí | - |- | Usuario que pagó (como texto). |
 | `id_estacionamiento` | `text` | Sí | - |- | Estacionamiento donde se hizo la reserva. |
@@ -110,10 +110,16 @@ Registro de cada pago hecho con Stripe para una reserva o una extensión de tiem
 | `metadata` | `jsonb` | Sí | - |- | Datos adicionales del pago en Stripe (id del pago, cupón, etc.). |
 | `fecha_pago` | `timestamptz` | No | `now()` |- | Fecha y hora del pago (UTC). |
 | `usuario_id` | `uuid` | Sí | `auth.uid()` | FK → `Usuario.id` | Usuario autenticado que hizo el pago; se llena solo con la sesión activa. |
+| `comision` | `double precision` | Sí | - | - | Comisión de SmartParking en pesos (4 % en reservas, 5 % en extensiones). La calcula `crear-pago-reserva-v2`. |
+| `descuento` | `double precision` | Sí | - | - | Descuento del cupón en pesos; `0` si no hubo cupón. |
+| `tipo` | `text` | Sí | - | - | `reserva` o `extension`. |
+| `stripe_payment_intent` | `text` | Sí | - | - | Id del PaymentIntent de Stripe (`pi_...`). `stripe-webhook` lo usa para no registrar dos veces el mismo pago. |
+
+Los pagos los inserta `stripe-webhook` con los datos que `crear-pago-reserva-v2` dejó en la metadata del PaymentIntent. `comision`, `descuento`, `tipo` y `stripe_payment_intent` se agregaron con la migración `20261018_pagos_desglose.sql`; los pagos anteriores las tienen en `null`.
 
 ## Notificacion
 
-Avisos de cada usuario. Cumple dos funciones: es el **historial** que muestra la pestaña Avisos de la app y la **bandeja de salida** de las notificaciones push (cada fila nueva se manda a Firebase mediante la Edge Function `enviar-notificacion`). La app solo puede leer sus propios avisos; los inserta únicamente el servidor.
+Avisos de cada usuario. Cumple dos funciones: es el **historial** que muestra la pestaña Avisos de la app y la **bandeja de salida** de las notificaciones push (cada fila nueva se manda a Firebase mediante la Edge Function `enviar-notificacion`). La app solo puede leer sus propios avisos y ocultarlos; los inserta únicamente el servidor.
 
 | Campo | Tipo | Nulo | Por defecto | Llave | Descripción |
 |---|---|---|---|---|---|
@@ -126,6 +132,7 @@ Avisos de cada usuario. Cumple dos funciones: es el **historial** que muestra la
 | `leida` | `boolean` | No | `false` | - | Reservado para marcar avisos como leídos; la app todavía no lo usa. |
 | `push_enviada` | `boolean` | No | `false` | - | `true` cuando Firebase aceptó el mensaje. Sirve para diagnosticar envíos; `false` si el usuario no tenía `fcm_token` o el envío falló. |
 | `created_at` | `timestamptz` | No | `now()` | - | Fecha y hora del aviso (UTC). |
+| `oculta` | `boolean` | No | `false` | - | `true` cuando el usuario quitó el aviso de la pestaña Avisos (X o deslizar). El aviso no se borra para que los recordatorios y los avisos del sensor no se vuelvan a enviar. Migración `20261109_notificaciones_ocultar.sql`. |
 
 ### Valores de `tipo`
 
@@ -152,7 +159,8 @@ La notificación de **bienvenida** no se guarda en esta tabla: la manda directam
 | Operación | Política | Quién |
 |---|---|---|
 | SELECT | `notificacion_select_propias`: `auth.uid() = id_usuario` | Usuario autenticado, solo sus avisos |
-| INSERT / UPDATE / DELETE | Ninguna | Solo los triggers (`SECURITY DEFINER`) y la llave `service_role` de las Edge Functions |
+| UPDATE | `notificacion_ocultar_propias`: `auth.uid() = id_usuario`, y permiso solo sobre la columna `oculta` | Usuario autenticado, solo para ocultar o volver a mostrar sus avisos |
+| INSERT / DELETE | Ninguna | Solo los triggers (`SECURITY DEFINER`) y la llave `service_role` de las Edge Functions |
 
 ---
 
@@ -188,14 +196,15 @@ Migraciones: `20261105_notificaciones_token.sql` (columnas de `Usuario`), `20261
 
 Puntos del esquema actual que conviene corregir en una siguiente versión:
 
-1. **`Pagos` no tiene llave primaria.** `id` es autoincremental pero no está declarado como `PRIMARY KEY`.
+1. ~~**`Pagos` no tiene llave primaria.**~~ Resuelto con `20261018_pagos_desglose.sql`: `id` es `PRIMARY KEY` y `stripe_payment_intent` es `UNIQUE` (verificado el 17/11/2026).
 2. **`Pagos.id_reserva` e `id_estacionamiento` son `text`** y no tienen FK; deberían ser `bigint` con FK a `Reserva.id` y `Estacionamiento.id`.
 3. **`Pagos` guarda al usuario dos veces:** `id_usuario` (texto) y `usuario_id` (uuid con FK). Basta con `usuario_id`.
 4. **`Usuario.contrasena`** no debería existir: las contraseñas las guarda Supabase Auth de forma segura.
 5. **`Cajon.id_estacionamiento` acepta nulos**; todo cajón debería pertenecer a un estacionamiento.
-6. **`Reserva` no impide que dos reservas confirmadas del mismo cajón se traslapen** en horario; se puede agregar una restricción `EXCLUDE`.
+6. ~~**`Reserva` no impide que dos reservas del mismo cajón se traslapen.**~~ Resuelto con `20261018_logica_negocio.sql`: restricción `reserva_sin_traslape` (`EXCLUDE USING gist (id_cajon WITH =, tstzrange(tiempo_inicio, tiempo_fin) WITH &&)`), que también incluye las pendientes (verificado el 17/11/2026).
 7. **`Notificacion.tipo` es texto libre.** No hay un `CHECK` que limite los valores a los seis tipos definidos; un error de escritura en un trigger crearía un tipo nuevo sin aviso.
-8. **`Notificacion.leida` no se usa.** Para marcar avisos como leídos falta una política `UPDATE` (solo sobre `leida`) y que la app la llame al abrir Avisos.
+8. **`Notificacion.leida` no se usa.** Para marcar avisos como leídos falta dar permiso de UPDATE sobre `leida` (hoy solo existe sobre `oculta`) y que la app la llame al abrir Avisos.
 9. **`Notificacion` crece sin límite.** Si se agrega una limpieza, solo debe borrar avisos de más de un día: borrar un `recordatorio_fin` todavía vigente podría hacer que se vuelva a mandar.
 10. **`Usuario.fcm_token` guarda un solo token por usuario.** Con sesión abierta en dos teléfonos, solo el último que guardó su token recibe las notificaciones push (el historial en Avisos sí se ve en ambos).
 11. **El secreto del trigger `notificacion_enviar_push` está en su definición.** En producción conviene moverlo a Supabase Vault.
+12. ~~**Las políticas de UPDATE de `Usuario` y `Reserva` no limitan columnas.**~~ Resuelto con `20261106_rls_etapa2.sql` (aplicada el 17/11/2026): la app solo puede escribir ciertas columnas de cada tabla. Detalle en `docs/technical/Application/Conexion API Supabase.md`.

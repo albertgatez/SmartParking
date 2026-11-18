@@ -1,4 +1,4 @@
-# Formato y estándares de comunicación
+# Formato y estándares de comunicación - SmartParking
 
 El sistema tiene dos canales: **serial** entre el Arduino y la Raspberry Pi, y **MQTT** entre la Raspberry Pi y los clientes. Este documento define el formato de ambos.
 

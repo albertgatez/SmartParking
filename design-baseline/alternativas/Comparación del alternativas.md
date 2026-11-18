@@ -1,4 +1,4 @@
-## Matriz de decisión
+## Matriz de decisión - SmartParking
 
 | **Alternativas**             | **Menor costo** | **Viabilidad técnica** | **Tiempo de implementación** | **Impacto en el usuario** | **Confiabilidad** | **Total**  |
 | ---------------------------- | --------------- | ---------------------- | ---------------------------- | ------------------------- | ----------------- | ---------- |

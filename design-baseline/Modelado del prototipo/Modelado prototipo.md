@@ -1,3 +1,5 @@
+# Modelado del prototipo - SmartParking
+
 Este prototipo de hardware está compuesto por una placa Arduino que actúa como controlador principal que va conectada a nuestra raspberry PI, conectada a varios sensores ultrasónicos ubicados en la parte frontal, los cuales se encargan de medir la distancia para detectar la presencia o ausencia de un vehículo en cada espacio.
 
 Encima de cada sensor se encuentran LEDs de diferentes colores que funcionan como indicadores visuales del estado de cada cajón: ocupado - rojo, en reserva - amarillo, disponible - verde (azul en caso discapacitado). El Arduino procesa las señales recibidas de los sensores y activa los LEDs correspondientes según la condición detectada.

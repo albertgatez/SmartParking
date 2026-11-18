@@ -145,11 +145,12 @@ El servidor manda mensajes **solo de datos** (sin bloque `notification`). Así `
 ```
 GET /rest/v1/Notificacion
     ?id_usuario=eq.<uuid>
+    &oculta=eq.false
     &select=id,id_reserva,tipo,titulo,mensaje,leida,created_at
     &order=created_at.desc
 ```
 
-La política RLS limita las filas al usuario del token; el filtro por `id_usuario` es adicional.
+La política RLS limita las filas al usuario del token; el filtro por `id_usuario` es adicional. Los avisos que el usuario quitó (`oculta = true`) no se muestran.
 
 | Estado | Qué se ve |
 |---|---|
@@ -161,6 +162,7 @@ La política RLS limita las filas al usuario del token; el filtro por `id_usuari
 - **Recarga:** cada vez que la pestaña se hace visible (`onResume`), así aparecen los avisos nuevos.
 - **Fecha:** se muestra en hora local (`America/Mexico_City`) con `DateTimeUtils.formatearFechaHoraLocal()`, igual que el Historial de pagos.
 - **Color del ícono por tipo:** verde para pagos (`reserva_confirmada`, `reserva_extendida`), naranja para `recordatorio_fin`, rojo para `cajon_ocupado` y azul de la marca para el resto.
+- **Quitar un aviso:** con la **X** de la tarjeta o deslizándola a la derecha. Aparece "Aviso eliminado" con **Deshacer**. El aviso no se borra: `NotificacionesApiClient.cambiarOculta()` hace `PATCH oculta = true` (o `false` al deshacer). Si el servidor no lo permite, el aviso vuelve a la lista con un mensaje. El detalle de la migración y de los permisos está en [Notificaciones en Supabase](Notificaciones%20en%20Supabase.md), sección 13.
 
 ## 8. Pruebas en la app
 
@@ -175,12 +177,14 @@ La política RLS limita las filas al usuario del token; el filtro por `id_usuari
 | 7 | Sin avisos | Entrar con un usuario sin filas en `Notificacion` | "No tienes avisos todavía" |
 | 8 | Cerrar sesión | Cerrar sesión y consultar `Usuario.fcm_token` | Es `null` |
 | 9 | Sin permiso | Denegar el permiso y generar un aviso | No se muestra la notificación, pero el aviso sí aparece en Avisos |
+| 10 | Quitar aviso | Tocar la X de un aviso, cambiar de pestaña y regresar | Ya no aparece; en la BD tiene `oculta = true` |
+| 11 | Deshacer | Deslizar un aviso a la derecha y tocar **Deshacer** | Vuelve a su lugar |
 
 Las pruebas de triggers, recordatorios y Edge Functions están en [Notificaciones en Supabase](Notificaciones%20en%20Supabase.md).
 
 ## Pendiente
 
-- **Marcar como leídos:** la columna `leida` existe pero no se usa. Falta una política `UPDATE` en `Notificacion`, marcar al abrir Avisos y un indicador de no leídos en la barra inferior.
+- **Marcar como leídos:** la columna `leida` existe pero no se usa. Ya hay una política `UPDATE` en `Notificacion` (para `oculta`); falta dar permiso sobre la columna `leida`, marcar al abrir Avisos y un indicador de no leídos en la barra inferior.
 - **La bienvenida no aparece en Avisos:** `notificar-bienvenida` manda el push directo sin insertar en `Notificacion`. Podría insertar la fila y dejar que el webhook la mande, para tener un solo camino.
 - **Avisos sin actualización en vivo:** si llega un aviso con la pestaña abierta, la lista se actualiza hasta la siguiente recarga. Se puede resolver con Supabase Realtime.
 - **Sin límite ni paginación:** la consulta trae todos los avisos del usuario.

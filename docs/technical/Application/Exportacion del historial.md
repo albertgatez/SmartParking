@@ -1,4 +1,4 @@
-# Exportación del historial de pagos
+# Exportación del historial de pagos — SmartParking
 
 Desde **Perfil → Historial** el usuario puede exportar sus pagos como un archivo CSV y compartirlo con el menú de Android (correo, WhatsApp, Drive, etc.).
 
@@ -57,7 +57,7 @@ sequenceDiagram
     else Hay pagos
         H->>C: obtenerCajonesDeReservas(usuario)
         C->>DB: GET Reserva (id_usuario = usuario) con Cajon
-        DB-->>C: Reservas propias (RLS)
+        DB-->>C: Reservas propias (filtro id_usuario)
         C-->>H: Cajón por reserva
         H->>E: generarCsv(pagos, estacionamientos, cajones)
         H->>E: escribir en caché (exports/historial_pagos.csv)
